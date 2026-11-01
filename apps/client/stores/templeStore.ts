@@ -185,28 +185,28 @@ export const INITIAL_SERVERS: TempleServerInfo[] = [
   {
     id: "server-1",
     name: "Chánh Điện 01 — Vô Lượng Quang",
-    shortName: "C.Đ 01 · Vô Lượng Quang",
-    desc: "Đại Chánh Điện trung tâm · Đang tụ hội đông đảo",
+    shortName: "C.Đ 01",
+    desc: "Đại Chánh Điện trung tâm · 100 bồ đoàn",
     capacity: 100,
-    onlineCount: 38,
+    onlineCount: 1, // Sĩ số thật: 1 (chính người dùng, không mockup)
     status: "available",
   },
   {
     id: "server-2",
     name: "Chánh Điện 02 — Diệu Pháp Liên Hoa",
-    shortName: "C.Đ 02 · Diệu Pháp",
+    shortName: "C.Đ 02",
     desc: "Đạo tràng trang nghiêm · Thanh tịnh an lạc",
     capacity: 100,
-    onlineCount: 16,
+    onlineCount: 0, // Sĩ số thật: 0
     status: "available",
   },
   {
     id: "server-3",
     name: "Chánh Điện 03 — Từ Bi Hỷ Xả",
-    shortName: "C.Đ 03 · Từ Bi Hỷ Xả",
+    shortName: "C.Đ 03",
     desc: "Thiền thất tĩnh mặc · Thích hợp tịnh tâm sâu",
     capacity: 100,
-    onlineCount: 7,
+    onlineCount: 0, // Sĩ số thật: 0
     status: "available",
   },
 ];
@@ -523,7 +523,29 @@ export const useTempleStore = create<TempleStore>((set, get) => ({
       setTimeout(() => get().setStatusNotice(null), 4500);
       return false;
     }
-    set({ currentServerId: id });
+    const previousId = get().currentServerId;
+    const remoteCount = get().remotePlayers.size;
+    set((state) => ({
+      currentServerId: id,
+      serversList: state.serversList.map((srv) => {
+        if (srv.id === id) {
+          const newCount = Math.max(1, remoteCount + 1);
+          return {
+            ...srv,
+            onlineCount: newCount,
+            status: newCount >= srv.capacity ? "full" : "available",
+          };
+        }
+        if (srv.id === previousId) {
+          return {
+            ...srv,
+            onlineCount: 0,
+            status: "available",
+          };
+        }
+        return srv;
+      }),
+    }));
     return true;
   },
   updateServerOnlineCount: (serverId, count) => {

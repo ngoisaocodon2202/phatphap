@@ -64,6 +64,7 @@ export function useMultiplayer({ room, instance, region }: UseMultiplayerOptions
           const map = new Map(currentStore.remotePlayers);
           map.delete(sessionId);
           currentStore.setRemotePlayers(map);
+          currentStore.updateServerOnlineCount(currentStore.currentServerId, map.size + 1);
         });
 
         joinedRoom.state.players.onChange((_player: any, sessionId: string) => {
@@ -158,7 +159,9 @@ function syncPlayers(room: Room<any>) {
     });
   });
 
-  useTempleStore.getState().setRemotePlayers(map);
+  const store = useTempleStore.getState();
+  store.setRemotePlayers(map);
+  store.updateServerOnlineCount(store.currentServerId, map.size + 1);
 }
 
 function syncLanterns(room: Room<any>) {

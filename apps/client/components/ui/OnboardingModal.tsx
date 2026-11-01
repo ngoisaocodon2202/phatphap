@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useTempleStore,
   ROBE_PALETTE,
@@ -45,7 +45,7 @@ export function OnboardingModal() {
     const targetServer = serversList.find((s) => s.id === selectedServer);
     if (targetServer && targetServer.onlineCount >= targetServer.capacity) {
       setServerWarning(
-        `⚠️ ${targetServer.name} đã đủ tối đa 100 Phật tử. Không thể tiếp nhận thêm người thứ 101! Xin quý Phật tử hoan hỷ chọn Chánh Điện khác.`
+        `⚠️ ${targetServer.name} đã đủ tối đa 100 Phật tử. Không thể tiếp nhận thêm người thứ 101!`
       );
       return;
     }
@@ -77,18 +77,18 @@ export function OnboardingModal() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "16px",
+        padding: "12px",
         background:
-          "radial-gradient(circle at 50% 40%, rgba(32, 18, 10, 0.68) 0%, rgba(12, 6, 3, 0.88) 100%)",
-        backdropFilter: "blur(12px)",
+          "radial-gradient(circle at 50% 40%, rgba(32, 18, 10, 0.72) 0%, rgba(12, 6, 3, 0.92) 100%)",
+        backdropFilter: "blur(14px)",
         fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
       }}
     >
-      <div className="w-full max-w-[960px] grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-        {/* Cột Trái (Desktop): Hình mẫu 2 Nhân Vật Mascot 3D Nam & Nữ Phật Tử chuẩn Implementation Plan */}
+      <div className="w-full max-w-[920px] grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+        {/* Cột Trái (Desktop): Hình mẫu 2 Nhân Vật Mascot 3D Nam & Nữ Phật Tử */}
         <div className="hidden md:flex md:col-span-6 flex-col items-center justify-center relative">
           <div
-            className="relative w-full aspect-[1.08/1] rounded-[28px] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85)]"
+            className="relative w-full aspect-[1.12/1] rounded-[24px] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.85)]"
             style={{
               border: "1.5px solid rgba(235, 192, 104, 0.6)",
             }}
@@ -101,23 +101,23 @@ export function OnboardingModal() {
                 transform: "scale(1.02)",
               }}
             />
-            {/* Khung chọn nổi bật theo giới tính đang chọn */}
+            {/* Lớp bóng tối nhẹ phía dưới */}
             <div
               style={{
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 68%, rgba(20,10,5,0.85) 100%)",
+                  "linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.2) 65%, rgba(20,10,5,0.85) 100%)",
               }}
             />
-            <div className="absolute bottom-3.5 inset-x-4 flex items-center justify-around gap-3">
+            <div className="absolute bottom-3 inset-x-3 flex items-center justify-around gap-2.5">
               <button
                 type="button"
                 onClick={() => {
                   setGender("male");
                   setSelectedRobeIdx(0);
                 }}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                   gender === "male"
                     ? "bg-gradient-to-r from-[#F6D58A] to-[#D9A441] text-[#1B0D09] shadow-[0_0_18px_rgba(246,213,138,0.65)] scale-105"
                     : "bg-black/60 text-[#F7EBD5]/85 border border-[#D9A441]/45 hover:border-[#F6D58A]"
@@ -131,7 +131,7 @@ export function OnboardingModal() {
                   setGender("female");
                   setSelectedRobeIdx(1);
                 }}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                   gender === "female"
                     ? "bg-gradient-to-r from-[#F6D58A] to-[#D9A441] text-[#1B0D09] shadow-[0_0_18px_rgba(246,213,138,0.65)] scale-105"
                     : "bg-black/60 text-[#F7EBD5]/85 border border-[#D9A441]/45 hover:border-[#F6D58A]"
@@ -143,696 +143,285 @@ export function OnboardingModal() {
           </div>
         </div>
 
-        {/* Cột Phải: Bảng Glassmorphism "Bước Vào Chánh Điện" giống 100% ảnh Implementation Plan */}
-        <div className="md:col-span-6 flex justify-center pt-7 md:pt-6">
-          <form
-            onSubmit={handleEnterTemple}
+        {/* Cột Phải: Bảng Glassmorphism "Bước Vào Chánh Điện" (Vừa vặn 1 màn hình không bị che/cuộn) */}
+        <div className="md:col-span-6 flex justify-center w-full">
+          <div
             style={{
+              position: "relative",
               width: "100%",
-              maxWidth: "410px",
+              maxWidth: "420px",
               background:
-                "linear-gradient(180deg, rgba(78, 66, 56, 0.78) 0%, rgba(48, 38, 32, 0.86) 100%)",
+                "linear-gradient(180deg, rgba(68, 54, 42, 0.94) 0%, rgba(32, 22, 16, 0.98) 100%)",
               backdropFilter: "blur(22px)",
-              border: "1.8px solid rgba(235, 195, 112, 0.78)",
-              borderRadius: "24px",
-              padding: "46px 26px 26px",
+              border: "1.8px solid rgba(235, 195, 112, 0.8)",
+              borderRadius: "22px",
+              padding: "20px 22px 18px",
               boxShadow:
-                "0 28px 70px rgba(0, 0, 0, 0.85), 0 0 42px rgba(217, 164, 65, 0.22), inset 0 1px 0 rgba(255, 240, 200, 0.4)",
+                "0 24px 60px rgba(0, 0, 0, 0.88), 0 0 35px rgba(217, 164, 65, 0.22), inset 0 1px 0 rgba(255, 240, 200, 0.35)",
               color: "#F7EBD5",
-              maxHeight: "88vh",
-              overflowY: "auto",
-              scrollbarWidth: "thin",
               boxSizing: "border-box",
             }}
           >
-            {/* Khung viền hoa văn 4 góc giống hệt ảnh thiết kế */}
+            {/* Khung viền hoa văn mạ vàng 4 góc cố định không trượt */}
             <div
               style={{
                 position: "absolute",
-                inset: "7px",
-                border: "1px solid rgba(246, 213, 138, 0.35)",
-                borderRadius: "18px",
+                inset: "6px",
+                border: "1px solid rgba(246, 213, 138, 0.3)",
+                borderRadius: "17px",
                 pointerEvents: "none",
               }}
             />
             {/* Hoa văn góc trên trái */}
             <svg
-              width="28"
-              height="28"
+              width="24"
+              height="24"
               viewBox="0 0 28 28"
               fill="none"
-              style={{ position: "absolute", top: 7, left: 7, pointerEvents: "none" }}
+              style={{ position: "absolute", top: 6, left: 6, pointerEvents: "none" }}
             >
-              <path
-                d="M2 20V9C2 5.134 5.134 2 9 2H20"
-                stroke="#F6D58A"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M6 15C6 10.029 10.029 6 15 6"
-                stroke="#F6D58A"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.75"
-              />
+              <path d="M2 20V9C2 5.134 5.134 2 9 2H20" stroke="#F6D58A" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M6 15C6 10.029 10.029 6 15 6" stroke="#F6D58A" strokeWidth="1.2" strokeLinecap="round" opacity="0.75" />
             </svg>
             {/* Hoa văn góc trên phải */}
             <svg
-              width="28"
-              height="28"
+              width="24"
+              height="24"
               viewBox="0 0 28 28"
               fill="none"
-              style={{
-                position: "absolute",
-                top: 7,
-                right: 7,
-                transform: "scaleX(-1)",
-                pointerEvents: "none",
-              }}
+              style={{ position: "absolute", top: 6, right: 6, transform: "scaleX(-1)", pointerEvents: "none" }}
             >
-              <path
-                d="M2 20V9C2 5.134 5.134 2 9 2H20"
-                stroke="#F6D58A"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M6 15C6 10.029 10.029 6 15 6"
-                stroke="#F6D58A"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.75"
-              />
+              <path d="M2 20V9C2 5.134 5.134 2 9 2H20" stroke="#F6D58A" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M6 15C6 10.029 10.029 6 15 6" stroke="#F6D58A" strokeWidth="1.2" strokeLinecap="round" opacity="0.75" />
             </svg>
             {/* Hoa văn góc dưới trái */}
             <svg
-              width="28"
-              height="28"
+              width="24"
+              height="24"
               viewBox="0 0 28 28"
               fill="none"
-              style={{
-                position: "absolute",
-                bottom: 7,
-                left: 7,
-                transform: "scaleY(-1)",
-                pointerEvents: "none",
-              }}
+              style={{ position: "absolute", bottom: 6, left: 6, transform: "scaleY(-1)", pointerEvents: "none" }}
             >
-              <path
-                d="M2 20V9C2 5.134 5.134 2 9 2H20"
-                stroke="#F6D58A"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M6 15C6 10.029 10.029 6 15 6"
-                stroke="#F6D58A"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.75"
-              />
+              <path d="M2 20V9C2 5.134 5.134 2 9 2H20" stroke="#F6D58A" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M6 15C6 10.029 10.029 6 15 6" stroke="#F6D58A" strokeWidth="1.2" strokeLinecap="round" opacity="0.75" />
             </svg>
             {/* Hoa văn góc dưới phải */}
             <svg
-              width="28"
-              height="28"
+              width="24"
+              height="24"
               viewBox="0 0 28 28"
               fill="none"
-              style={{
-                position: "absolute",
-                bottom: 7,
-                right: 7,
-                transform: "scale(-1, -1)",
-                pointerEvents: "none",
-              }}
+              style={{ position: "absolute", bottom: 6, right: 6, transform: "scale(-1, -1)", pointerEvents: "none" }}
             >
-              <path
-                d="M2 20V9C2 5.134 5.134 2 9 2H20"
-                stroke="#F6D58A"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M6 15C6 10.029 10.029 6 15 6"
-                stroke="#F6D58A"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.75"
-              />
+              <path d="M2 20V9C2 5.134 5.134 2 9 2H20" stroke="#F6D58A" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M6 15C6 10.029 10.029 6 15 6" stroke="#F6D58A" strokeWidth="1.2" strokeLinecap="round" opacity="0.75" />
             </svg>
 
-            {/* Huy hiệu Hoa Sen Hoàng Kim Nổi Trên Đỉnh Viền (Floating Top Medallion) */}
-            <div
-              style={{
-                position: "absolute",
-                top: "-38px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "76px",
-                height: "76px",
-                borderRadius: "999px",
-                background:
-                  "radial-gradient(circle at 50% 42%, rgba(122, 92, 52, 0.96) 0%, rgba(58, 42, 26, 0.98) 100%)",
-                border: "2.2px solid #FCE4A6",
-                boxShadow:
-                  "0 0 26px rgba(246, 213, 138, 0.65), inset 0 0 16px rgba(246, 213, 138, 0.35)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
-                <defs>
-                  <linearGradient
-                    id="lotusMedallionGrad"
-                    x1="24"
-                    y1="8"
-                    x2="24"
-                    y2="38"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop offset="0%" stopColor="#FFF8DC" />
-                    <stop offset="55%" stopColor="#F6D58A" />
-                    <stop offset="100%" stopColor="#D99B26" />
-                  </linearGradient>
-                </defs>
-                {/* Cánh sen ngoài xòe rộng */}
-                <path
-                  d="M7 27C7.5 32.5 13.5 36.5 21 36.8C15.5 34.5 12 30.2 11.5 25.5C9.5 25.5 8 26 7 27Z"
-                  fill="url(#lotusMedallionGrad)"
-                  opacity="0.88"
-                />
-                <path
-                  d="M41 27C40.5 32.5 34.5 36.5 27 36.8C32.5 34.5 36 30.2 36.5 25.5C38.5 25.5 40 26 41 27Z"
-                  fill="url(#lotusMedallionGrad)"
-                  opacity="0.88"
-                />
-                {/* Cánh sen lớp giữa */}
-                <path
-                  d="M12.5 18.5C10.5 24.5 13 31.5 21.5 35.8C17.5 31.8 16.5 26 17.5 20.5C15.8 19.2 14 18.5 12.5 18.5Z"
-                  fill="url(#lotusMedallionGrad)"
-                  opacity="0.95"
-                />
-                <path
-                  d="M35.5 18.5C37.5 24.5 35 31.5 26.5 35.8C30.5 31.8 31.5 26 30.5 20.5C32.2 19.2 34 18.5 35.5 18.5Z"
-                  fill="url(#lotusMedallionGrad)"
-                  opacity="0.95"
-                />
-                {/* Cánh sen trung tâm */}
-                <path
-                  d="M24 10C19.5 16.5 18 22.8 18 28.2C18 32.5 20.6 35.8 24 37.2C27.4 35.8 30 32.5 30 28.2C30 22.8 28.5 16.5 24 10Z"
-                  fill="url(#lotusMedallionGrad)"
-                />
-              </svg>
-            </div>
-
-            {/* Tiêu đề chính */}
-            <h2
-              style={{
-                margin: "0 0 18px",
-                textAlign: "center",
-                fontSize: "clamp(20px, 5vw, 25px)",
-                fontWeight: 700,
-                color: "#F8DFA1",
-                letterSpacing: "0.02em",
-                textShadow: "0 2px 12px rgba(246, 213, 138, 0.35)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Bước Vào Chánh Điện
-            </h2>
-
-            {/* Ô nhập Tên / Pháp Danh */}
-            <div style={{ marginBottom: "10px" }}>
-              <input
-                type="text"
-                value={name}
-                maxLength={24}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Tên / Pháp Danh"
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  background: "rgba(38, 31, 26, 0.72)",
-                  border: "1.4px solid rgba(217, 175, 96, 0.68)",
-                  color: "#FFF8EC",
-                  fontSize: "15.5px",
-                  fontWeight: 500,
-                  textAlign: "center",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  boxShadow: "inset 0 2px 8px rgba(0,0,0,0.45)",
-                }}
-              />
-            </div>
-
-            {/* Gợi ý nhanh Pháp Danh trên 1 hàng gọn */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "5px",
-                marginBottom: "16px",
-                overflowX: "auto",
-                paddingBottom: "2px",
-              }}
-            >
-              {SUGGESTED_BUDDHIST_NAMES.slice(0, 5).map((sug) => {
-                const active = name === sug.name;
-                return (
-                  <button
-                    key={sug.name}
-                    type="button"
-                    onClick={() => {
-                      setName(sug.name);
-                      setGender(sug.gender);
-                    }}
-                    style={{
-                      padding: "3px 9px",
-                      borderRadius: "999px",
-                      fontSize: "11px",
-                      fontWeight: active ? 600 : 500,
-                      background: active
-                        ? "rgba(217, 164, 65, 0.32)"
-                        : "rgba(255, 255, 255, 0.06)",
-                      border: active
-                        ? "1px solid #F6D58A"
-                        : "1px solid rgba(217, 164, 65, 0.28)",
-                      color: active ? "#FFF4D2" : "rgba(247, 235, 213, 0.78)",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {sug.name}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* 2 Thẻ Chọn Nam Phật Tử / Nữ Phật Tử giống hệt ảnh thiết kế */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "14px",
-                marginBottom: "20px",
-              }}
-            >
-              {[
-                {
-                  id: "male" as PilgrimGender,
-                  title: "Nam Phật Tử",
-                },
-                {
-                  id: "female" as PilgrimGender,
-                  title: "Nữ Phật Tử",
-                },
-              ].map((opt) => {
-                const isSelected = gender === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setGender(opt.id)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "10px",
-                      padding: "16px 12px 14px",
-                      borderRadius: "14px",
-                      background: isSelected
-                        ? "linear-gradient(180deg, rgba(225, 185, 102, 0.42) 0%, rgba(132, 98, 45, 0.28) 100%)"
-                        : "rgba(38, 31, 26, 0.68)",
-                      border: isSelected
-                        ? "1.8px solid #FCE4A6"
-                        : "1.2px solid rgba(217, 175, 96, 0.48)",
-                      color: "#FFF8EC",
-                      cursor: "pointer",
-                      transition: "all 0.18s ease",
-                      boxShadow: isSelected
-                        ? "0 6px 22px rgba(246, 213, 138, 0.28), inset 0 2px 10px rgba(255, 244, 208, 0.35)"
-                        : "none",
-                    }}
-                  >
-                    {/* Icon Tượng Phật Tử Vàng Kim Chuẩn Ảnh Tham Chiếu */}
-                    {opt.id === "male" ? (
-                      <svg width="42" height="44" viewBox="0 0 44 46" fill="none">
-                        {/* Đầu & Tóc Nam Phật Tử */}
-                        <path
-                          d="M14.5 14C14.5 9.5 17.8 6.5 22 6.5C26.2 6.5 29.5 9.5 29.5 14C29.5 18.5 26.2 22 22 22C17.8 22 14.5 18.5 14.5 14Z"
-                          fill="#F6D58A"
-                        />
-                        <path
-                          d="M15 12.5C17 9.5 21 9.2 23.5 10.2C25.5 9.5 27.8 10.5 29 12.5"
-                          stroke="#5A3E1B"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                        />
-                        {/* Thân Áo Tràng Cổ Giao Lĩnh Chữ Y */}
-                        <path
-                          d="M9.5 39C10.2 30.5 14.8 26 22 26C29.2 26 33.8 30.5 34.5 39H9.5Z"
-                          fill="#F6D58A"
-                        />
-                        <path
-                          d="M17.5 26.5L22 33.5L26.5 26.5"
-                          stroke="#5A3E1B"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M22 33.5L19 39"
-                          stroke="#5A3E1B"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    ) : (
-                      <svg width="42" height="44" viewBox="0 0 44 46" fill="none">
-                        {/* Búi Tóc Cao Nữ Phật Tử */}
-                        <ellipse cx="22" cy="5.5" rx="4.2" ry="3.2" fill="#F6D58A" />
-                        <path
-                          d="M18.2 7.2C20 8.2 24 8.2 25.8 7.2"
-                          stroke="#5A3E1B"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                        />
-                        {/* Đầu & Khuôn Mặt Nữ Phật Tử */}
-                        <path
-                          d="M14.8 15.5C14.8 11.2 18 8.2 22 8.2C26 8.2 29.2 11.2 29.2 15.5C29.2 19.8 26 23 22 23C18 23 14.8 19.8 14.8 15.5Z"
-                          fill="#F6D58A"
-                        />
-                        <path
-                          d="M15.2 14.5C18 11.5 22 11.2 28.8 14.5"
-                          stroke="#5A3E1B"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                        {/* Thân Áo Tràng Cổ Giao Lĩnh Chữ Y */}
-                        <path
-                          d="M10 39C10.8 30.8 15.2 26.5 22 26.5C28.8 26.5 33.2 30.8 34 39H10Z"
-                          fill="#F6D58A"
-                        />
-                        <path
-                          d="M17.5 27L22 33.8L26.5 27"
-                          stroke="#5A3E1B"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M22 33.8L19.2 39"
-                          stroke="#5A3E1B"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    )}
-
-                    <span
-                      style={{
-                        fontSize: "clamp(13px, 3.5vw, 15px)",
-                        fontWeight: 700,
-                        color: "#FFF8EC",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {opt.title}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* 3 Ô Vuông Màu Áo Tràng (Áo Lam | Nâu Sồng | Hoàng Y) Giống Hệt Ảnh Thiết Kế */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "14px",
-                marginBottom: "24px",
-                justifyItems: "center",
-              }}
-            >
-              {ROBE_PALETTE.map((robe, idx) => {
-                const isSelected = selectedRobeIdx === idx;
-                return (
-                  <button
-                    key={robe.id}
-                    type="button"
-                    onClick={() => setSelectedRobeIdx(idx)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "transparent",
-                      border: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "clamp(58px, 15vw, 72px)",
-                        height: "clamp(58px, 15vw, 72px)",
-                        borderRadius: "14px",
-                        background: robe.color,
-                        border: isSelected
-                          ? "2.5px solid #FFF2C6"
-                          : "1.5px solid rgba(217, 175, 96, 0.55)",
-                        boxShadow: isSelected
-                          ? "0 0 20px rgba(246, 213, 138, 0.5), inset 0 1px 3px rgba(255,255,255,0.4)"
-                          : "0 4px 12px rgba(0,0,0,0.45)",
-                        transition: "all 0.18s ease",
-                        transform: isSelected ? "scale(1.05)" : "scale(1)",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "clamp(12px, 3.2vw, 14px)",
-                        fontWeight: isSelected ? 700 : 500,
-                        color: isSelected ? "#FFF4D2" : "#F7EBD5",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {robe.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* ── CHỌN CHÁNH ĐIỆN (SERVER) · GIỚI HẠN TỐI ĐA 100 PHẬT TỬ / CHÁNH ĐIỆN ── */}
-            <div style={{ marginBottom: "22px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "8px",
-                  padding: "0 2px",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#F6D58A",
-                    letterSpacing: "0.02em",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
-                  }}
-                >
-                  <span>🏛️</span>
-                  <span>CHỌN CHÁNH ĐIỆN (SERVER)</span>
-                </span>
-                <span style={{ fontSize: "10px", color: "rgba(247, 235, 213, 0.72)" }}>
-                  Giới hạn 100 người / server
-                </span>
+            <form onSubmit={handleEnterTemple} className="space-y-3 relative z-10">
+              {/* Tiêu đề chính kèm Biểu tượng Hoa Sen Vàng */}
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#3D2614] border border-[#F6D58A] mb-1 shadow-md">
+                  <span className="text-base">🪷</span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold text-[#F8DFA1] tracking-wide whitespace-nowrap">
+                  Bước Vào Chánh Điện
+                </h2>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {serversList.map((srv) => {
-                  const isSelected = selectedServer === srv.id;
-                  const isFull = srv.onlineCount >= srv.capacity;
+              {/* Ô nhập Tên / Pháp Danh & 5 Gợi Ý Nhanh */}
+              <div>
+                <input
+                  type="text"
+                  value={name}
+                  maxLength={24}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nhập Pháp danh / Tên của bạn"
+                  className="w-full px-3 py-1.5 rounded-xl bg-[#261F1A]/90 border border-[#D9AF60]/60 text-[#FFF8EC] text-sm text-center outline-none focus:border-[#F6D58A] shadow-inner font-medium placeholder:text-[#F7EBD5]/45"
+                />
+                <div className="flex justify-center gap-1.5 mt-1.5 overflow-x-auto py-0.5 whitespace-nowrap scrollbar-none">
+                  {SUGGESTED_BUDDHIST_NAMES.slice(0, 5).map((sug) => {
+                    const active = name === sug.name;
+                    return (
+                      <button
+                        key={sug.name}
+                        type="button"
+                        onClick={() => {
+                          setName(sug.name);
+                          setGender(sug.gender);
+                        }}
+                        className={`px-2 py-0.5 rounded-full text-[10.5px] font-medium transition-all whitespace-nowrap ${
+                          active
+                            ? "bg-[#D9A441]/40 border border-[#F6D58A] text-[#FFF4D2] font-bold shadow-sm"
+                            : "bg-white/5 border border-[#D9A441]/25 text-[#F7EBD5]/75 hover:bg-white/10"
+                        }`}
+                      >
+                        {sug.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                  return (
-                    <button
-                      key={srv.id}
-                      type="button"
-                      disabled={isFull}
-                      onClick={() => {
-                        if (isFull) {
-                          setServerWarning(
-                            `⚠️ ${srv.name} đã đủ tối đa 100 người. Không thể tiếp nhận thêm người thứ 101!`
-                          );
-                          return;
-                        }
-                        setSelectedServer(srv.id);
-                        setServerWarning(null);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "9px 12px",
-                        borderRadius: "12px",
-                        background: isFull
-                          ? "rgba(45, 15, 10, 0.65)"
-                          : isSelected
-                          ? "linear-gradient(90deg, rgba(225, 185, 102, 0.35) 0%, rgba(132, 98, 45, 0.25) 100%)"
-                          : "rgba(35, 27, 22, 0.65)",
-                        border: isFull
-                          ? "1.4px solid rgba(239, 68, 68, 0.65)"
-                          : isSelected
-                          ? "1.8px solid #FCE4A6"
-                          : "1.2px solid rgba(217, 175, 96, 0.38)",
-                        cursor: isFull ? "not-allowed" : "pointer",
-                        opacity: isFull ? 0.7 : 1,
-                        transition: "all 0.18s ease",
-                        textAlign: "left",
-                        boxShadow:
-                          isSelected && !isFull
-                            ? "0 4px 16px rgba(246, 213, 138, 0.25)"
-                            : "none",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "9px", minWidth: 0 }}>
-                        <span
-                          style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "999px",
-                            background: isFull ? "#EF4444" : "#10B981",
-                            boxShadow: isFull ? "0 0 8px #EF4444" : "0 0 8px #10B981",
-                            flexShrink: 0,
-                          }}
-                        />
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 700,
-                              color: isFull ? "#FCA5A5" : isSelected ? "#FFF8EC" : "#F7EBD5",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {srv.name}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "9.5px",
-                              color: isFull ? "#F87171" : "rgba(247, 235, 213, 0.65)",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {isFull ? "⚠️ Đã đủ 100 người · Chặn người thứ 101" : srv.desc}
+              {/* Chọn Giới Tính (Nam / Nữ) & Màu Áo Tràng */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Cột 1: Giới tính */}
+                <div className="space-y-1">
+                  <div className="text-[10.5px] font-semibold text-[#F6D58A]/90 text-center">
+                    Giới tính
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { id: "male" as PilgrimGender, label: "Nam", icon: "👨" },
+                      { id: "female" as PilgrimGender, label: "Nữ", icon: "👩" },
+                    ].map((g) => {
+                      const isSel = gender === g.id;
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => setGender(g.id)}
+                          className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                            isSel
+                              ? "bg-gradient-to-r from-[#F6D58A] to-[#D9A441] text-[#1B0D09] shadow-md border border-[#FFF4D2]"
+                              : "bg-[#251B14]/80 border border-[#D9A441]/35 text-[#F7EBD5]/80 hover:bg-white/5"
+                          }`}
+                        >
+                          <span>{g.icon}</span>
+                          <span>{g.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Cột 2: Màu áo tràng */}
+                <div className="space-y-1">
+                  <div className="text-[10.5px] font-semibold text-[#F6D58A]/90 text-center">
+                    Màu Áo Tràng
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                    {ROBE_PALETTE.map((robe, idx) => {
+                      const isSel = selectedRobeIdx === idx;
+                      return (
+                        <button
+                          key={robe.id}
+                          type="button"
+                          onClick={() => setSelectedRobeIdx(idx)}
+                          className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+                            isSel
+                              ? "bg-[#D9A441]/25 border border-[#F6D58A] shadow-sm"
+                              : "bg-[#251B14]/60 border border-[#D9A441]/25 hover:border-[#D9A441]/50"
+                          }`}
+                          title={robe.label}
+                        >
+                          <span
+                            className="w-4 h-4 rounded-full border border-white/70 shadow-sm"
+                            style={{ background: robe.color }}
+                          />
+                          <span className="text-[9px] mt-0.5 text-[#F7EBD5]/90 whitespace-nowrap truncate max-w-[42px]">
+                            {robe.label.split(" ")[1] || robe.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── CHỌN CHÁNH ĐIỆN (SERVER DỮ LIỆU THẬT · 100 NGƯỜI / CHÁNH ĐIỆN) ── */}
+              <div className="space-y-1.5 pt-0.5">
+                <div className="flex items-center justify-between text-[11px] px-1 whitespace-nowrap">
+                  <span className="font-bold text-[#F6D58A] flex items-center gap-1">
+                    <span>🏛️</span>
+                    <span>CHỌN CHÁNH ĐIỆN</span>
+                  </span>
+                  <span className="text-[9.5px] text-[#F7EBD5]/65">
+                    Tối đa 100 người / server
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {serversList.map((srv) => {
+                    const isSelected = selectedServer === srv.id;
+                    const isFull = srv.onlineCount >= srv.capacity;
+
+                    return (
+                      <button
+                        key={srv.id}
+                        type="button"
+                        disabled={isFull}
+                        onClick={() => {
+                          if (isFull) {
+                            setServerWarning(
+                              `⚠️ ${srv.name} đã đủ 100 người. Không thể tiếp nhận thêm người thứ 101!`
+                            );
+                            return;
+                          }
+                          setSelectedServer(srv.id);
+                          setServerWarning(null);
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl transition-all text-left whitespace-nowrap ${
+                          isFull
+                            ? "bg-red-950/40 border border-red-500/50 opacity-60 cursor-not-allowed"
+                            : isSelected
+                            ? "bg-[#D9A441]/22 border border-[#F6D58A] shadow-sm"
+                            : "bg-[#231710]/70 border border-[#D9A441]/25 hover:border-[#F6D58A]/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 pr-1">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              isFull
+                                ? "bg-red-500 shadow-[0_0_6px_#ef4444]"
+                                : "bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse"
+                            }`}
+                          />
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-[#FFF8EC] truncate max-w-[170px] sm:max-w-[210px] whitespace-nowrap">
+                              {srv.name}
+                            </div>
+                            <div className="text-[9.5px] text-[#F7EBD5]/65 truncate max-w-[170px] sm:max-w-[210px] whitespace-nowrap">
+                              {isFull ? "⚠️ Đã đủ 100 người" : srv.desc}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          flexShrink: 0,
-                          marginLeft: "8px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "10.5px",
-                            fontWeight: 700,
-                            padding: "2px 7px",
-                            borderRadius: "999px",
-                            background: isFull
-                              ? "rgba(239, 68, 68, 0.28)"
-                              : isSelected
-                              ? "rgba(246, 213, 138, 0.3)"
-                              : "rgba(255, 255, 255, 0.08)",
-                            border: isFull
-                              ? "1px solid #EF4444"
-                              : "1px solid rgba(217, 164, 65, 0.4)",
-                            color: isFull ? "#FCA5A5" : "#FFF4D2",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {isFull ? "100/100 · ĐÃ ĐẦY" : `${srv.onlineCount}/100`}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: "9px",
-                            fontWeight: 600,
-                            color: isFull ? "#EF4444" : "#34D399",
-                            marginTop: "2px",
-                          }}
-                        >
-                          {isFull ? "Khóa (Full)" : "Còn chỗ"}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="text-right shrink-0">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${
+                              isFull
+                                ? "bg-red-900/60 border-red-500 text-red-200"
+                                : isSelected
+                                ? "bg-[#D9A441]/40 border-[#F6D58A] text-[#FFF4D2]"
+                                : "bg-black/30 border-[#D9A441]/30 text-[#F6D58A]"
+                            }`}
+                          >
+                            {srv.onlineCount}/100
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {serverWarning && (
+                  <div className="p-1.5 rounded-lg bg-red-950/80 border border-red-500/70 text-red-200 text-[10.5px] text-center font-medium animate-pulse">
+                    {serverWarning}
+                  </div>
+                )}
               </div>
 
-              {serverWarning && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    padding: "7px 12px",
-                    borderRadius: "10px",
-                    background: "rgba(220, 38, 38, 0.25)",
-                    border: "1px solid rgba(239, 68, 68, 0.7)",
-                    color: "#FCA5A5",
-                    fontSize: "11px",
-                    lineHeight: "1.4",
-                    textAlign: "center",
-                    fontWeight: 500,
-                  }}
+              {/* Nút Pill Vàng Kim "Bước Vào Chánh Điện" (Luôn hiển thị đầy đủ trên màn hình) */}
+              <div className="pt-1">
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-full bg-gradient-to-r from-[#F9E4A8] via-[#DFAD4B] to-[#B88022] border-2 border-[#FFF5D2] text-[#221109] font-bold text-sm sm:text-base shadow-[0_8px_24px_rgba(246,213,138,0.5)] hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap"
                 >
-                  {serverWarning}
-                </div>
-              )}
-            </div>
-
-            {/* Nút Pill Vàng Kim Phát Sáng "Bước Vào Chánh Điện" Giống Hệt Ảnh Thiết Kế */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <button
-                type="submit"
-                style={{
-                  width: "84%",
-                  padding: "13px 22px",
-                  borderRadius: "999px",
-                  background:
-                    "linear-gradient(180deg, #F9E4A8 0%, #DFAD4B 52%, #B88022 100%)",
-                  border: "2px solid #FFF5D2",
-                  color: "#221109",
-                  fontSize: "clamp(14.5px, 3.8vw, 17px)",
-                  fontWeight: 700,
-                  letterSpacing: "0.02em",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  boxShadow:
-                    "0 8px 28px rgba(246, 213, 138, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.75)",
-                  transition: "transform 0.15s ease",
-                }}
-              >
-                Bước Vào Chánh Điện
-              </button>
-            </div>
-          </form>
+                  Bước Vào Chánh Điện
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

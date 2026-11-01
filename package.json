@@ -1,0 +1,17 @@
+{
+  "name": "sansa-temple",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm --prefix apps/server run dev\" \"npm --prefix apps/client run dev\"",
+    "dev:client": "npm --prefix apps/client run dev",
+    "dev:server": "npm --prefix apps/server run dev",
+    "build": "npm --prefix apps/server run build && npm --prefix apps/client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -38,7 +38,9 @@ interface TempleSceneProps {
 }
 
 export function TempleScene({ room, instance, region }: TempleSceneProps) {
-  useMultiplayer({ room, instance, region });
+  const currentServerId = useTempleStore((s) => s.currentServerId);
+  const activeRoomId = currentServerId || room;
+  useMultiplayer({ room: activeRoomId, instance, region });
   const qualityPreset = useTempleStore((s) => s.qualityPreset);
 
   const dprRange: [number, number] =

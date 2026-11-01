@@ -18,8 +18,16 @@ const MAX_LANTERNS       = 50;
 const LANTERN_LIFETIME   = 120_000; // 2 minutes
 
 export class TempleRoom extends Room<TempleState> {
-  maxClients = 50;
+  maxClients = 100; // Tối đa đúng 100 Phật tử tương ứng 100 bồ đoàn Chánh Điện
   private lanternTimers = new Map<string, NodeJS.Timeout>();
+
+  onAuth(_client: Client, _options: any) {
+    // Chặn người thứ 101 bước vào Chánh Điện nếu đã đủ 100 người
+    if (this.clients.length >= this.maxClients) {
+      throw new Error("Chánh Điện đã đủ tối đa 100 Phật tử. Không thể tiếp nhận thêm người thứ 101!");
+    }
+    return true;
+  }
 
   onCreate(options: { roomId?: string; region?: string }) {
     this.setState(new TempleState());

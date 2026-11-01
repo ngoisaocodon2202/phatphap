@@ -136,6 +136,12 @@ export function HUD() {
   const setTimeMode         = useTempleStore((s) => s.setTimeMode);
   const setWeatherMode      = useTempleStore((s) => s.setWeatherMode);
 
+  const currentServerId    = useTempleStore((s) => s.currentServerId);
+  const serversList        = useTempleStore((s) => s.serversList);
+  const setServerModalOpen = useTempleStore((s) => s.setServerModalOpen);
+  const currentServer      = serversList.find((s) => s.id === currentServerId) || serversList[0];
+  const currentPilgrimsCount = Math.max(1, remotePlayersCount + 1);
+
   const phaseLabelMap: Record<string, string> = {
     morning: "Sáng",
     noon: "Trưa",
@@ -331,6 +337,21 @@ export function HUD() {
             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse shrink-0" />
             <span className="whitespace-nowrap">
               {totalPilgrims} <span className="hidden md:inline">Phật tử</span>
+            </span>
+          </button>
+
+          {/* Nút Hiển Thị & Chuyển Đổi Server / Chánh Điện (Server 1, 2, 3) */}
+          <button
+            onClick={() => setServerModalOpen(true)}
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0"
+            title="Nhấn để đổi Chánh Điện (Server 1, 2, 3) · Tối đa 100 người/server"
+          >
+            <span className="text-[11px] shrink-0">🏛️</span>
+            <span className="font-semibold text-[#FFF4D2] max-w-[58px] sm:max-w-none truncate">
+              {currentServer?.shortName || "C.Đ 01"}
+            </span>
+            <span className="text-[9.5px] text-[#F6D58A]/85 bg-black/40 px-1 py-0.2 rounded-full border border-[#D9A441]/30 hidden xs:inline">
+              {currentPilgrimsCount}/100
             </span>
           </button>
         </div>

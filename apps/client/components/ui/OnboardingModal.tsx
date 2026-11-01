@@ -14,19 +14,25 @@ export function OnboardingModal() {
   const setOnboardingCompleted = useTempleStore((s) => s.setOnboardingCompleted);
   const setAudioPlaying = useTempleStore((s) => s.setAudioPlaying);
   const setBellRinging = useTempleStore((s) => s.setBellRinging);
+  const currentServerId = useTempleStore((s) => s.currentServerId);
+  const serversList = useTempleStore((s) => s.serversList);
+  const setCurrentServerId = useTempleStore((s) => s.setCurrentServerId);
 
   const [name, setName] = useState(localPlayer.vietnameseName || "");
   const [gender, setGender] = useState<PilgrimGender>(localPlayer.gender || "male");
   const [selectedRobeIdx, setSelectedRobeIdx] = useState(0);
+  const [selectedServer, setSelectedServer] = useState(currentServerId || "server-1");
+  const [serverWarning, setServerWarning] = useState<string | null>(null);
 
   useEffect(() => {
     setName(localPlayer.vietnameseName || "");
     setGender(localPlayer.gender || "male");
+    setSelectedServer(currentServerId || "server-1");
     const foundIdx = ROBE_PALETTE.findIndex(
       (r) => r.color.toLowerCase() === localPlayer.avatarColor.toLowerCase()
     );
     if (foundIdx >= 0) setSelectedRobeIdx(foundIdx);
-  }, [localPlayer, onboardingCompleted]);
+  }, [localPlayer, onboardingCompleted, currentServerId]);
 
   if (onboardingCompleted) return null;
 
@@ -35,6 +41,16 @@ export function OnboardingModal() {
   const handleEnterTemple = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim() || "Thiện Tâm";
+
+    const targetServer = serversList.find((s) => s.id === selectedServer);
+    if (targetServer && targetServer.onlineCount >= targetServer.capacity) {
+      setServerWarning(
+        `⚠️ ${targetServer.name} đã đủ tối đa 100 Phật tử. Không thể tiếp nhận thêm người thứ 101! Xin quý Phật tử hoan hỷ chọn Chánh Điện khác.`
+      );
+      return;
+    }
+
+    setCurrentServerId(selectedServer);
 
     setLocalPlayer({
       username: `${selectedRobe.label} · ${trimmedName}`,
@@ -143,7 +159,9 @@ export function OnboardingModal() {
               boxShadow:
                 "0 28px 70px rgba(0, 0, 0, 0.85), 0 0 42px rgba(217, 164, 65, 0.22), inset 0 1px 0 rgba(255, 240, 200, 0.4)",
               color: "#F7EBD5",
-              position: "relative",
+              maxHeight: "88vh",
+              overflowY: "auto",
+              scrollbarWidth: "thin",
               boxSizing: "border-box",
             }}
           >
@@ -608,6 +626,185 @@ export function OnboardingModal() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* ── CHỌN CHÁNH ĐIỆN (SERVER) · GIỚI HẠN TỐI ĐA 100 PHẬT TỬ / CHÁNH ĐIỆN ── */}
+            <div style={{ marginBottom: "22px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                  padding: "0 2px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#F6D58A",
+                    letterSpacing: "0.02em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <span>🏛️</span>
+                  <span>CHỌN CHÁNH ĐIỆN (SERVER)</span>
+                </span>
+                <span style={{ fontSize: "10px", color: "rgba(247, 235, 213, 0.72)" }}>
+                  Giới hạn 100 người / server
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {serversList.map((srv) => {
+                  const isSelected = selectedServer === srv.id;
+                  const isFull = srv.onlineCount >= srv.capacity;
+
+                  return (
+                    <button
+                      key={srv.id}
+                      type="button"
+                      disabled={isFull}
+                      onClick={() => {
+                        if (isFull) {
+                          setServerWarning(
+                            `⚠️ ${srv.name} đã đủ tối đa 100 người. Không thể tiếp nhận thêm người thứ 101!`
+                          );
+                          return;
+                        }
+                        setSelectedServer(srv.id);
+                        setServerWarning(null);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "9px 12px",
+                        borderRadius: "12px",
+                        background: isFull
+                          ? "rgba(45, 15, 10, 0.65)"
+                          : isSelected
+                          ? "linear-gradient(90deg, rgba(225, 185, 102, 0.35) 0%, rgba(132, 98, 45, 0.25) 100%)"
+                          : "rgba(35, 27, 22, 0.65)",
+                        border: isFull
+                          ? "1.4px solid rgba(239, 68, 68, 0.65)"
+                          : isSelected
+                          ? "1.8px solid #FCE4A6"
+                          : "1.2px solid rgba(217, 175, 96, 0.38)",
+                        cursor: isFull ? "not-allowed" : "pointer",
+                        opacity: isFull ? 0.7 : 1,
+                        transition: "all 0.18s ease",
+                        textAlign: "left",
+                        boxShadow:
+                          isSelected && !isFull
+                            ? "0 4px 16px rgba(246, 213, 138, 0.25)"
+                            : "none",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "9px", minWidth: 0 }}>
+                        <span
+                          style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "999px",
+                            background: isFull ? "#EF4444" : "#10B981",
+                            boxShadow: isFull ? "0 0 8px #EF4444" : "0 0 8px #10B981",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              color: isFull ? "#FCA5A5" : isSelected ? "#FFF8EC" : "#F7EBD5",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {srv.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "9.5px",
+                              color: isFull ? "#F87171" : "rgba(247, 235, 213, 0.65)",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {isFull ? "⚠️ Đã đủ 100 người · Chặn người thứ 101" : srv.desc}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          flexShrink: 0,
+                          marginLeft: "8px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "10.5px",
+                            fontWeight: 700,
+                            padding: "2px 7px",
+                            borderRadius: "999px",
+                            background: isFull
+                              ? "rgba(239, 68, 68, 0.28)"
+                              : isSelected
+                              ? "rgba(246, 213, 138, 0.3)"
+                              : "rgba(255, 255, 255, 0.08)",
+                            border: isFull
+                              ? "1px solid #EF4444"
+                              : "1px solid rgba(217, 164, 65, 0.4)",
+                            color: isFull ? "#FCA5A5" : "#FFF4D2",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {isFull ? "100/100 · ĐÃ ĐẦY" : `${srv.onlineCount}/100`}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "9px",
+                            fontWeight: 600,
+                            color: isFull ? "#EF4444" : "#34D399",
+                            marginTop: "2px",
+                          }}
+                        >
+                          {isFull ? "Khóa (Full)" : "Còn chỗ"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {serverWarning && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    padding: "7px 12px",
+                    borderRadius: "10px",
+                    background: "rgba(220, 38, 38, 0.25)",
+                    border: "1px solid rgba(239, 68, 68, 0.7)",
+                    color: "#FCA5A5",
+                    fontSize: "11px",
+                    lineHeight: "1.4",
+                    textAlign: "center",
+                    fontWeight: 500,
+                  }}
+                >
+                  {serverWarning}
+                </div>
+              )}
             </div>
 
             {/* Nút Pill Vàng Kim Phát Sáng "Bước Vào Chánh Điện" Giống Hệt Ảnh Thiết Kế */}

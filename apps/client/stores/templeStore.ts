@@ -170,11 +170,60 @@ export function getRandomPilgrim() {
   return DEFAULT_PILGRIM;
 }
 
+// ── QUẢN LÝ 3 CHÁNH ĐIỆN (SERVER) · MỖI SERVER TỐI ĐA 100 NGƯỜI (CHẶN NGƯỜI 101) ──
+export interface TempleServerInfo {
+  id: string; // "server-1" | "server-2" | "server-3"
+  name: string; // "Chánh Điện 01 — Vô Lượng Quang"
+  shortName: string; // "C.Đ 01"
+  desc: string; // "Đại Chánh Điện trung tâm · Đang tụ hội đông đảo"
+  capacity: number; // 100 người
+  onlineCount: number; // Sĩ số hiện tại (0 - 100)
+  status: "available" | "full";
+}
+
+export const INITIAL_SERVERS: TempleServerInfo[] = [
+  {
+    id: "server-1",
+    name: "Chánh Điện 01 — Vô Lượng Quang",
+    shortName: "C.Đ 01 · Vô Lượng Quang",
+    desc: "Đại Chánh Điện trung tâm · Đang tụ hội đông đảo",
+    capacity: 100,
+    onlineCount: 38,
+    status: "available",
+  },
+  {
+    id: "server-2",
+    name: "Chánh Điện 02 — Diệu Pháp Liên Hoa",
+    shortName: "C.Đ 02 · Diệu Pháp",
+    desc: "Đạo tràng trang nghiêm · Thanh tịnh an lạc",
+    capacity: 100,
+    onlineCount: 16,
+    status: "available",
+  },
+  {
+    id: "server-3",
+    name: "Chánh Điện 03 — Từ Bi Hỷ Xả",
+    shortName: "C.Đ 03 · Từ Bi Hỷ Xả",
+    desc: "Thiền thất tĩnh mặc · Thích hợp tịnh tâm sâu",
+    capacity: 100,
+    onlineCount: 7,
+    status: "available",
+  },
+];
+
 export interface TempleStore {
   // Connection
   connected: boolean;
   sessionId: string;
   roomId: string;
+
+  // ── Multi-Server Selection (3 Chánh Điện · Tối đa 100 người / server, chặn người 101) ──
+  currentServerId: string;
+  serversList: TempleServerInfo[];
+  serverModalOpen: boolean;
+  setServerModalOpen: (open: boolean) => void;
+  setCurrentServerId: (id: string) => boolean;
+  updateServerOnlineCount: (serverId: string, count: number) => void;
 
   // Onboarding (Chọn tên & giới tính mỗi khi vào trang)
   onboardingCompleted: boolean;
@@ -317,6 +366,34 @@ export const useTempleStore = create<TempleStore>((set, get) => ({
   connected: false,
   sessionId: "",
   roomId: "",
+
+  currentServerId: "server-1",
+  serversList: INITIAL_SERVERS,
+  serverModalOpen: false,
+  setServerModalOpen: (serverModalOpen) => set({ serverModalOpen }),
+  setCurrentServerId: (id) => {
+    const s = get().serversList.find((srv) => srv.id === id);
+    if (s && s.onlineCount >= s.capacity) {
+      get().setStatusNotice(`⚠️ ${s.name} đã đủ tối đa 100 Phật tử. Không thể tiếp nhận thêm người thứ 101!`);
+      setTimeout(() => get().setStatusNotice(null), 4500);
+      return false;
+    }
+    set({ currentServerId: id });
+    return true;
+  },
+  updateServerOnlineCount: (serverId, count) => {
+    set((s) => ({
+      serversList: s.serversList.map((srv) =>
+        srv.id === serverId
+          ? {
+              ...srv,
+              onlineCount: Math.min(srv.capacity, Math.max(0, count)),
+              status: count >= srv.capacity ? "full" : "available",
+            }
+          : srv
+      ),
+    }));
+  },
 
   onboardingCompleted: false,
   setOnboardingCompleted: (v) =>

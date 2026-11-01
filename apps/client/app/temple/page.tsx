@@ -38,6 +38,11 @@ const OnboardingModal = dynamic(
   { ssr: false }
 );
 
+const ServerModal = dynamic(
+  () => import("@/components/ui/ServerModal").then((m) => ({ default: m.ServerModal })),
+  { ssr: false }
+);
+
 function TempleLoader() {
   return (
     <div className="flex h-[100dvh] items-center justify-center bg-[#1B0D09] font-sans px-4">
@@ -75,6 +80,7 @@ function TempleContent() {
       <MalaModal />
       <SutraModal />
       <OnboardingModal />
+      <ServerModal />
     </div>
   );
 }

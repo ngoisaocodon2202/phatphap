@@ -136,6 +136,7 @@ export function HUD() {
   const setTimeMode         = useTempleStore((s) => s.setTimeMode);
   const setWeatherMode      = useTempleStore((s) => s.setWeatherMode);
 
+  const connected           = useTempleStore((s) => s.connected);
   const currentServerId    = useTempleStore((s) => s.currentServerId);
   const serversList        = useTempleStore((s) => s.serversList);
   const setServerModalOpen = useTempleStore((s) => s.setServerModalOpen);
@@ -316,17 +317,17 @@ export function HUD() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20 select-none flex flex-col justify-between font-sans overflow-hidden">
-      {/* ── 1. THANH HEADER RESPONSIVE MOBILE & DESKTOP (KHÔNG BỊ TAI THỎ / DYNAMIC ISLAND CHE, KHÔNG TRÀN VIỀN) ── */}
-      <header className="temple-safe-header pointer-events-auto w-full max-w-full box-border bg-gradient-to-b from-[#1B0D09]/95 via-[#1B0D09]/80 to-transparent backdrop-blur-md border-b border-[#D9A441]/25 px-2 sm:px-5 md:px-6 pb-2 flex items-center justify-between gap-1 sm:gap-3 whitespace-nowrap flex-nowrap">
-        {/* Góc trái: Logo Hoa Sen Vàng + Pháp Danh Phật Tử + Số người hiện diện + Server + Bảng Tinh Tấn */}
+      {/* ── 1. THANH HEADER RESPONSIVE MOBILE & DESKTOP (KHÔNG BỊ TRÀN PADDING, KHÔNG TRÀN VIỀN) ── */}
+      <header className="temple-safe-header pointer-events-auto w-full max-w-full box-border bg-gradient-to-b from-[#1B0D09]/95 via-[#1B0D09]/80 to-transparent backdrop-blur-md border-b border-[#D9A441]/25 px-2 sm:px-5 md:px-6 pb-2 flex items-center justify-between gap-1.5 sm:gap-3 whitespace-nowrap flex-nowrap">
+        {/* Góc trái: Logo + Tên Phật tử + Server */}
         <div className="flex items-center gap-1 sm:gap-2.5 min-w-0 shrink-0">
           <div
             onClick={resetCamera}
-            className="flex items-center gap-1 sm:gap-2.5 cursor-pointer group shrink-0"
+            className="flex items-center gap-1 sm:gap-2 cursor-pointer group shrink-0"
             title="Đặt lại góc nhìn Chánh Điện"
           >
-            <div className="w-5 h-5 sm:w-9 sm:h-9 flex items-center justify-center drop-shadow-[0_2px_10px_rgba(217,164,65,0.45)] group-hover:scale-105 transition-transform shrink-0">
-              <LotusBrandIcon className="w-5 h-5 sm:w-8 sm:h-8" />
+            <div className="w-5 h-5 sm:w-8 sm:h-8 flex items-center justify-center drop-shadow-[0_2px_8px_rgba(217,164,65,0.45)] group-hover:scale-105 transition-transform shrink-0">
+              <LotusBrandIcon className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="whitespace-nowrap">
               <span className="block font-serif tracking-wide text-[11px] sm:text-base md:text-lg font-bold bg-gradient-to-r from-[#FFF3D1] via-[#F6D58A] to-[#D9A441] bg-clip-text text-transparent whitespace-nowrap leading-tight">
@@ -348,7 +349,7 @@ export function HUD() {
               className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-[#F6D58A] shrink-0"
               style={{ background: localPlayer.avatarColor }}
             />
-            <span className="font-semibold text-[#FFF4D2] max-w-[42px] xs:max-w-[70px] sm:max-w-[140px] truncate whitespace-nowrap">
+            <span className="font-semibold text-[#FFF4D2] max-w-[38px] xs:max-w-[70px] sm:max-w-[140px] truncate whitespace-nowrap">
               {localPlayer.vietnameseName || "Thiện Tâm"}
             </span>
             <span className="text-[10px] text-[#F6D58A]/80 hidden md:inline whitespace-nowrap">
@@ -356,51 +357,74 @@ export function HUD() {
             </span>
           </button>
 
-          {/* Số Phật tử đang hiện diện */}
+          {/* Giao diện Desktop: Tách riêng Sĩ số & Nút Server */}
           <button
             onClick={() => setPresenceOpen(!presenceOpen)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#1B0D09]/85 border border-[#D9A441]/35 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5]/90 transition-all whitespace-nowrap shrink-0"
+            className="hidden sm:flex items-center gap-1.5 bg-[#1B0D09]/85 border border-[#D9A441]/35 hover:border-[#F6D58A] px-2.5 py-1 rounded-full text-xs text-[#F7EBD5]/90 transition-all whitespace-nowrap shrink-0"
             title="Danh sách Phật tử đang cùng tu tập"
           >
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse shrink-0" />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${connected ? "bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" : "bg-amber-400"}`} />
             <span className="whitespace-nowrap">
-              {totalPilgrims} <span className="hidden md:inline">Phật tử</span>
+              {totalPilgrims} Phật tử
             </span>
           </button>
 
-          {/* Nút Hiển Thị & Chuyển Đổi Server / Chánh Điện (Server 1, 2, 3) */}
+          {/* Nút Server cho Desktop */}
           <button
             onClick={() => setServerModalOpen(true)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
+            className="hidden sm:flex items-center gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-2.5 py-1 rounded-full text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
             title="Nhấn để đổi Chánh Điện (Server 1, 2, 3) · Tối đa 100 người/server"
           >
             <span className="text-[11px] shrink-0">🏛️</span>
-            <span className="font-semibold text-[#FFF4D2] max-w-[44px] xs:max-w-[58px] sm:max-w-none truncate whitespace-nowrap">
+            <span className="font-semibold text-[#FFF4D2] truncate">
               {currentServer?.shortName || "C.Đ 01"}
             </span>
-            <span className="text-[9.5px] text-[#F6D58A]/85 bg-black/40 px-1 py-0.2 rounded-full border border-[#D9A441]/30 hidden xs:inline whitespace-nowrap">
+            <span className="text-[9.5px] text-[#F6D58A]/85 bg-black/40 px-1 py-0.2 rounded-full border border-[#D9A441]/30">
               {currentPilgrimsCount}/100
             </span>
           </button>
 
-          {/* Nút Mở Bảng Vàng Tinh Tấn, Tu Tập Ký & Tường Cầu An */}
+          {/* Nút Server + Sĩ Số kết hợp cực gọn cho Mobile (Chống tràn viền) */}
+          <button
+            onClick={() => setServerModalOpen(true)}
+            className="sm:hidden flex items-center gap-1 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-2 py-1 rounded-full text-[10px] text-[#F6D58A] transition-all active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
+            title="Nhấn để đổi Chánh Điện (Server 1, 2, 3)"
+          >
+            <span className="text-[10px] shrink-0">🏛️</span>
+            <span className="font-semibold text-[#FFF4D2] max-w-[42px] truncate whitespace-nowrap">
+              {currentServer?.shortName?.split(" ")[0] || "C.Đ 01"}
+            </span>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${connected ? "bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse" : "bg-amber-400"}`} />
+            <span className="text-[9px] text-[#F6D58A] font-bold">
+              {currentPilgrimsCount}
+            </span>
+          </button>
+
+          {/* Nút Bảng Tinh Tấn cho Desktop */}
           <button
             onClick={() => setLeaderboardModalOpen(true)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
+            className="hidden sm:flex items-center gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-2.5 py-1 rounded-full text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
             title="Mở Bảng Vàng Tinh Tấn, Tu Tập Ký & Tường Cầu An"
           >
-            <span className="text-[11px] sm:text-[12px] shrink-0">🏆</span>
-            <span className="font-semibold text-[#FFF4D2] hidden sm:inline whitespace-nowrap">
+            <span className="text-[12px] shrink-0">🏆</span>
+            <span className="font-semibold text-[#FFF4D2] whitespace-nowrap">
               Bảng Tinh Tấn
-            </span>
-            <span className="font-semibold text-[#FFF4D2] sm:hidden whitespace-nowrap">
-              Tinh Tấn
             </span>
           </button>
         </div>
 
-        {/* Góc phải: Thỉnh Chuông Chùa, Chọn Âm Thanh, Thời Tiết & Đồ Họa */}
+        {/* Góc phải: Thỉnh Chuông, Âm Thanh, Thời Tiết & Leaderboard */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0 whitespace-nowrap">
+          {/* Nút Bảng Tinh Tấn Icon Pill cho Mobile */}
+          <button
+            onClick={() => setLeaderboardModalOpen(true)}
+            className="sm:hidden flex items-center justify-center bg-[#24110A]/90 border border-[#D9A441]/50 w-7 h-7 rounded-full text-[#F6D58A] active:scale-95 transition-all shadow-md shrink-0"
+            title="Mở Bảng Vàng Tinh Tấn"
+          >
+            <span className="text-[12px]">🏆</span>
+          </button>
+
+          {/* Nút Thỉnh Chuông */}
           <button
             onClick={handleRingTempleBell}
             className="flex items-center justify-center gap-1.5 bg-[#2A140B]/90 hover:bg-[#D9A441]/25 border border-[#D9A441]/55 hover:border-[#F6D58A] w-7 h-7 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full text-[11px] sm:text-xs text-[#F6D58A] font-medium transition-all active:scale-95 shadow-md whitespace-nowrap shrink-0"
@@ -417,38 +441,78 @@ export function HUD() {
             <span className="hidden sm:inline whitespace-nowrap">Thỉnh Chuông</span>
           </button>
 
-          <div className="flex bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/40 rounded-full px-1 sm:px-2 py-0.5 items-center gap-0.5 sm:gap-1 text-xs text-[#F7EBD5] shadow-md whitespace-nowrap shrink-0">
+          {/* Âm thanh: Nút Toggle nhanh cho Mobile, ZenSelect đầy đủ cho Desktop */}
+          <div className="flex items-center shrink-0">
+            {/* Mobile Icon Button */}
             <button
               onClick={toggleAudioPlaying}
               title={audioPlaying ? "Tắt âm thanh" : "Bật âm thanh"}
-              className="p-1 hover:bg-white/10 rounded-full hover:scale-110 active:scale-95 transition-all shrink-0 text-[#F6D58A]"
+              className="sm:hidden flex items-center justify-center bg-[#24110A]/90 border border-[#D9A441]/40 w-7 h-7 rounded-full text-[#F6D58A] active:scale-95 transition-all shadow-md shrink-0"
             >
               {audioPlaying ? (
-                <svg viewBox="0 0 18 18" className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <svg viewBox="0 0 18 18" className="w-3 h-3 text-[#F6D58A]" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <path d="M3 7h2.8L9.5 3.8v10.4L5.8 11H3V7z" fill="currentColor" />
                   <path d="M12 6.2a4 4 0 010 5.6M14 4.2a7 7 0 010 9.6" strokeLinecap="round" />
                 </svg>
               ) : (
-                <svg viewBox="0 0 18 18" className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" strokeWidth="1.7">
+                <svg viewBox="0 0 18 18" className="w-3 h-3 text-[#F7EBD5]/60" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <path d="M3 7h2.8L9.5 3.8v10.4L5.8 11H3V7z" />
                   <path d="M12.2 7l3 4m0-4l-3 4" strokeLinecap="round" />
                 </svg>
               )}
             </button>
-            <ZenSelect
-              value={audioTrack}
-              options={AUDIO_TRACK_OPTIONS}
-              onChange={(val) => setAudioTrack(val as any)}
-            />
+
+            {/* Desktop Full ZenSelect */}
+            <div className="hidden sm:flex bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/40 rounded-full px-2 py-0.5 items-center gap-1 text-xs text-[#F7EBD5] shadow-md whitespace-nowrap shrink-0">
+              <button
+                onClick={toggleAudioPlaying}
+                title={audioPlaying ? "Tắt âm thanh" : "Bật âm thanh"}
+                className="p-1 hover:bg-white/10 rounded-full hover:scale-110 active:scale-95 transition-all shrink-0 text-[#F6D58A]"
+              >
+                {audioPlaying ? (
+                  <svg viewBox="0 0 18 18" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.7">
+                    <path d="M3 7h2.8L9.5 3.8v10.4L5.8 11H3V7z" fill="currentColor" />
+                    <path d="M12 6.2a4 4 0 010 5.6M14 4.2a7 7 0 010 9.6" strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 18 18" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.7">
+                    <path d="M3 7h2.8L9.5 3.8v10.4L5.8 11H3V7z" />
+                    <path d="M12.2 7l3 4m0-4l-3 4" strokeLinecap="round" />
+                  </svg>
+                )}
+              </button>
+              <ZenSelect
+                value={audioTrack}
+                options={AUDIO_TRACK_OPTIONS}
+                onChange={(val) => setAudioTrack(val as any)}
+              />
+            </div>
           </div>
 
-          {/* Chọn Thời Gian & Thời Tiết Real-time (Sáng / Trưa / Chiều / Tối / Mưa) */}
-          <div className="flex bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/40 rounded-full px-1 sm:px-1.5 py-0.5 items-center text-xs text-[#F7EBD5] shadow-md whitespace-nowrap shrink-0">
-            <ZenSelect
-              value={currentEnvSelectValue}
-              options={envOptions}
-              onChange={handleEnvChange}
-            />
+          {/* Thời Tiết & Thời Gian: Mobile icon chuyển đổi nhanh, Desktop ZenSelect */}
+          <div className="flex items-center shrink-0">
+            {/* Mobile Icon Button: Nhấn để đổi thời tiết/thời gian nhanh */}
+            <button
+              onClick={() => {
+                const modes = ["realtime", "morning", "noon", "afternoon", "night", "rain"];
+                const currentIdx = modes.indexOf(currentEnvSelectValue);
+                const nextMode = modes[(currentIdx + 1) % modes.length];
+                handleEnvChange(nextMode);
+              }}
+              className="sm:hidden flex items-center justify-center bg-[#24110A]/90 border border-[#D9A441]/40 w-7 h-7 rounded-full text-xs active:scale-95 transition-all shadow-md shrink-0"
+              title="Nhấn để đổi Thời tiết / Buổi (Sáng/Trưa/Chiều/Tối/Mưa)"
+            >
+              <span>{weatherCondition === "rain" ? "🌧️" : phaseIconMap[timeOfDay] || "☀️"}</span>
+            </button>
+
+            {/* Desktop Full ZenSelect */}
+            <div className="hidden sm:flex bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/40 rounded-full px-1.5 py-0.5 items-center text-xs text-[#F7EBD5] shadow-md whitespace-nowrap shrink-0">
+              <ZenSelect
+                value={currentEnvSelectValue}
+                options={envOptions}
+                onChange={handleEnvChange}
+              />
+            </div>
           </div>
 
           <button

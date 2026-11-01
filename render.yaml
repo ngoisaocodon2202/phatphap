@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sansa-temple-server
+    env: node
+    plan: free
+    rootDir: apps/server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 2567
+      - key: NODE_ENV
+        value: production

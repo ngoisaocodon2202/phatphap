@@ -23,7 +23,7 @@ canvas { display: block; }
 
 /* Header an toàn cho tai thỏ / Dynamic Island trên mọi dòng điện thoại iOS / Android */
 .temple-safe-header {
-  padding-top: max(env(safe-area-inset-top, 0px), 44px);
+  padding-top: max(env(safe-area-inset-top, 0px), 8px);
 }
 @media (min-width: 640px) {
   .temple-safe-header {

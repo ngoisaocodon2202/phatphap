@@ -49,7 +49,7 @@ if (process.env.NODE_ENV !== "production") {
 
 app.get("/health", (_req, res) => res.json({ status: "ok", ts: Date.now() }));
 
-httpServer.listen(PORT, () => {
-  console.log(`🏯 SansaTemple Server listening on :${PORT}`);
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`🏯 SansaTemple Server listening on 0.0.0.0:${PORT}`);
   console.log(`📊 Monitor: http://localhost:${PORT}/monitor`);
 });

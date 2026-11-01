@@ -4,7 +4,43 @@ import { Client, Room } from "colyseus.js";
 import { useTempleStore } from "@/stores/templeStore";
 import type { RemotePlayer, Lantern } from "@/stores/templeStore";
 
-const SERVER_URL = process.env.NEXT_PUBLIC_COLYSEUS_URL ?? "ws://localhost:2567";
+export function getColyseusEndpoint(): string {
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_COLYSEUS_URL || "ws://localhost:2567";
+  }
+
+  // 1. URL search parameter: ?server=...
+  const urlParam = new URLSearchParams(window.location.search).get("server");
+  if (urlParam) {
+    try {
+      localStorage.setItem("sansa_colyseus_url", urlParam);
+    } catch {}
+    return urlParam;
+  }
+
+  // 2. Saved custom URL from localStorage
+  try {
+    const saved = localStorage.getItem("sansa_colyseus_url");
+    if (saved) return saved;
+  } catch {}
+
+  // 3. Environment variable from build
+  if (process.env.NEXT_PUBLIC_COLYSEUS_URL) {
+    return process.env.NEXT_PUBLIC_COLYSEUS_URL;
+  }
+
+  // 4. Nếu mở qua mạng LAN Wi-Fi (ví dụ mở http://192.168.1.18:3000 trên điện thoại)
+  const hostname = window.location.hostname;
+  const isHttps = window.location.protocol === "https:";
+  const wsProtocol = isHttps ? "wss:" : "ws:";
+
+  if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1" && !hostname.includes("vercel.app")) {
+    return `${wsProtocol}//${hostname}:2567`;
+  }
+
+  // 5. Mặc định
+  return isHttps ? "wss://localhost:2567" : "ws://localhost:2567";
+}
 
 interface UseMultiplayerOptions {
   room: string;
@@ -12,10 +48,15 @@ interface UseMultiplayerOptions {
   region: string;
 }
 
-// Singleton client
+// Singleton client cache theo endpoint
 let colyseusClient: Client | null = null;
-function getClient() {
-  if (!colyseusClient) colyseusClient = new Client(SERVER_URL);
+let currentClientEndpoint = "";
+
+function getClient(endpoint: string) {
+  if (!colyseusClient || currentClientEndpoint !== endpoint) {
+    colyseusClient = new Client(endpoint);
+    currentClientEndpoint = endpoint;
+  }
   return colyseusClient;
 }
 
@@ -28,7 +69,8 @@ export function useMultiplayer({ room, instance, region }: UseMultiplayerOptions
 
     async function connect() {
       try {
-        const client = getClient();
+        const endpoint = getColyseusEndpoint();
+        const client = getClient(endpoint);
         const store = useTempleStore.getState();
 
         // Join or create room with instance sharding
@@ -68,7 +110,6 @@ export function useMultiplayer({ room, instance, region }: UseMultiplayerOptions
         });
 
         joinedRoom.state.players.onChange((_player: any, sessionId: string) => {
-          // Bỏ qua cập nhật của chính local player để không gây re-render liên tục
           if (sessionId === joinedRoom.sessionId) return;
           syncPlayers(joinedRoom);
         });
@@ -115,8 +156,11 @@ export function useMultiplayer({ room, instance, region }: UseMultiplayerOptions
           console.error(`[Colyseus] Error ${code}: ${message}`);
         });
       } catch (err) {
-        console.error("[Multiplayer] Connection failed:", err);
-        if (!disposed) setTimeout(connect, 3000);
+        console.warn("[Multiplayer] Connection failed (running in single-player offline mode):", err);
+        if (!disposed) {
+          useTempleStore.getState().setConnected(false);
+          setTimeout(connect, 4000);
+        }
       }
     }
 

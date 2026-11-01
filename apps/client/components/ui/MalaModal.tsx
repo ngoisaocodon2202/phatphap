@@ -118,7 +118,7 @@ export function MalaModal() {
   // Chống giữ nút/giữ phím đếm liên tục: mỗi lần bấm chỉ lần đúng 1 hạt
   const lastActionTime = useRef(0);
 
-  // ── LẦN ĐÚNG 1 HẠT (CHỈ TỪNG HẠT MỘT, KHÔNG TỰ ĐỘNG LẶP) ──
+  // ── LẦN ĐÚNG 1 HẠT (CHỈ TỪNG HẠT MỘT, KHÔNG TỰ ĐỘNG LẶP KHI GIỮ) ──
   const advanceOneBead = useCallback(() => {
     const now = Date.now();
     // Ngăn chặn giữ nút hoặc spam phím: tối thiểu 160ms giữa 2 lần nhấn
@@ -182,11 +182,11 @@ export function MalaModal() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [malaModalOpen, advanceOneBead, stepBackOneBead]);
 
-  // ── TÍNH TOÁN TỌA ĐỘ 108 HẠT TRÊN VÒNG TRÒN CHUỖI HẠT (HÌNH CÁI VÒNG) ──
+  // ── TÍNH TOÁN TỌA ĐỘ 108 HẠT TRÒN ĐỀU 100% (ĐỒNG TÂM TUYỆT ĐỐI) ──
   const TOTAL_BEADS = 108;
   const CENTER_X = 150;
-  const CENTER_Y = 145;
-  const RADIUS = 118;
+  const CENTER_Y = 142;
+  const RADIUS = 114;
 
   const beads = useMemo(() => {
     return Array.from({ length: TOTAL_BEADS }, (_, i) => {
@@ -230,13 +230,13 @@ export function MalaModal() {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
-          maxWidth: "420px",
+          maxWidth: "400px",
           background:
             "linear-gradient(180deg, rgba(58, 42, 30, 0.96) 0%, rgba(28, 18, 12, 0.98) 100%)",
           backdropFilter: "blur(24px)",
           border: "1.8px solid rgba(235, 195, 112, 0.8)",
           borderRadius: "24px",
-          padding: "16px 18px 18px",
+          padding: "16px 16px 18px",
           boxShadow:
             "0 28px 75px rgba(0, 0, 0, 0.9), 0 0 45px rgba(217, 164, 65, 0.28)",
           color: "#F7EBD5",
@@ -249,7 +249,7 @@ export function MalaModal() {
         <button
           type="button"
           onClick={() => setMalaModalOpen(false)}
-          className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 border border-[#D9A441]/45 text-[#F6D58A] flex items-center justify-center text-sm transition-all z-10"
+          className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 border border-[#D9A441]/45 text-[#F6D58A] flex items-center justify-center text-sm transition-all z-20"
         >
           ✕
         </button>
@@ -258,7 +258,7 @@ export function MalaModal() {
         <button
           type="button"
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`absolute top-3.5 left-3.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all z-10 ${
+          className={`absolute top-3.5 left-3.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all z-20 ${
             soundEnabled
               ? "bg-[#D9A441]/25 border-[#F6D58A] text-[#FFF4D2]"
               : "bg-black/40 border-white/20 text-[#F7EBD5]/60"
@@ -272,20 +272,18 @@ export function MalaModal() {
         </button>
 
         {/* Tiêu đề thanh tịnh */}
-        <div className="text-center pt-1 mb-1">
+        <div className="text-center pt-0.5 mb-1">
           <h2 className="text-base sm:text-lg font-bold text-[#F8DFA1] tracking-wide flex items-center justify-center gap-1.5 whitespace-nowrap">
             <span>📿</span>
             <span>CHUỖI 108 HẠT BỒ ĐỀ</span>
           </h2>
         </div>
 
-        {/* ── HÌNH CÁI VÒNG CHUỖI HẠT TRÒN THẬT 108 HẠT ── */}
-        <div className="relative flex items-center justify-center my-1">
+        {/* ── HÌNH CÁI VÒNG CHUỖI HẠT TRÒN THẬT 108 HẠT (TRÒN ĐỀU ĐỒNG TÂM) ── */}
+        <div className="relative w-[285px] h-[285px] sm:w-[300px] sm:h-[300px] mx-auto my-1 flex items-center justify-center">
           <svg
-            width="300"
-            height="315"
-            viewBox="0 0 300 315"
-            className="overflow-visible select-none pointer-events-none"
+            viewBox="0 0 300 300"
+            className="w-full h-full overflow-visible select-none pointer-events-none"
           >
             <defs>
               {/* Gradient hạt đã lần niệm (Vàng hổ phách tỏa sáng) */}
@@ -319,9 +317,17 @@ export function MalaModal() {
                 <stop offset="75%" stopColor="#B45309" />
                 <stop offset="100%" stopColor="#451A03" />
               </radialGradient>
+
+              {/* Gradient Tua Rua */}
+              <linearGradient id="tasselGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#DC2626" />
+                <stop offset="60%" stopColor="#B91C1C" />
+                <stop offset="90%" stopColor="#D97706" />
+                <stop offset="100%" stopColor="#FBBF24" />
+              </linearGradient>
             </defs>
 
-            {/* Sợi dây tơ xỏ liên kết trọn vẹn thành 1 vòng tròn */}
+            {/* Sợi dây tơ xỏ liên kết trọn vẹn thành 1 vòng tròn hoàn hảo */}
             <circle
               cx={CENTER_X}
               cy={CENTER_Y}
@@ -332,7 +338,7 @@ export function MalaModal() {
               opacity="0.65"
             />
 
-            {/* Vẽ toàn bộ 108 Hạt Tràng đều đặn quanh vòng tròn */}
+            {/* Vẽ toàn bộ 108 Hạt Tràng phân bố đều đặn quanh vòng tròn */}
             {beads.map((bead) => {
               const isChanted = bead.num <= malaCount;
               const isActive = bead.num === malaCount;
@@ -393,40 +399,32 @@ export function MalaModal() {
             })}
 
             {/* Tua rua lụa đỏ vàng treo ở Hạt Mẹ (Guru Bead) phía đáy vòng tròn */}
-            <g transform={`translate(${CENTER_X}, ${CENTER_Y + RADIUS + 5})`}>
-              {/* Thắt nút hoa sen hồ lô */}
+            <g transform={`translate(${CENTER_X}, ${CENTER_Y + RADIUS + 4})`}>
               <rect x="-3" y="0" width="6" height="5" rx="1.5" fill="#D97706" stroke="#FDE68A" strokeWidth="0.8" />
-              {/* Dải tua rua đỏ thắm trang nghiêm */}
-              <path
-                d="M-5,5 L5,5 L7,34 L-7,34 Z"
-                fill="url(#tasselGrad)"
-              />
-              <linearGradient id="tasselGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#DC2626" />
-                <stop offset="60%" stopColor="#B91C1C" />
-                <stop offset="90%" stopColor="#D97706" />
-                <stop offset="100%" stopColor="#FBBF24" />
-              </linearGradient>
+              <path d="M-5,5 L5,5 L7,32 L-7,32 Z" fill="url(#tasselGrad)" />
             </g>
           </svg>
 
-          {/* ── BỐ CỤC TRUNG TÂM NẰM TRỌN TRONG LÒNG VÒNG TRÒN ── */}
+          {/* ── BỐ CỤC TRUNG TÂM ĐỒNG TÂM 100% VỚI VÒNG CHUỖI HẠT ── */}
           <div
             className="absolute flex flex-col items-center justify-center text-center cursor-pointer select-none"
             style={{
-              width: "186px",
-              height: "186px",
+              width: "172px",
+              height: "172px",
               borderRadius: "999px",
-              background: "radial-gradient(circle at 50% 50%, rgba(42, 26, 17, 0.75) 0%, rgba(18, 10, 6, 0.95) 100%)",
+              background: "radial-gradient(circle at 50% 50%, rgba(42, 26, 17, 0.78) 0%, rgba(18, 10, 6, 0.95) 100%)",
               border: "1.2px solid rgba(217, 164, 65, 0.35)",
               boxShadow: "inset 0 0 24px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 0, 0, 0.6)",
+              top: `${(CENTER_Y / 300) * 100}%`,
+              left: `${(CENTER_X / 300) * 100}%`,
+              transform: "translate(-50%, -50%)",
             }}
             onClick={advanceOneBead}
             title="Nhấn vào đây để lần 1 hạt (hoặc nhấn nút bên dưới)"
           >
             {/* Chọn Câu Niệm Phật */}
             <div
-              className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-black/40 border border-[#D9A441]/30 max-w-[170px]"
+              className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-black/40 border border-[#D9A441]/30 max-w-[155px]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -436,7 +434,7 @@ export function MalaModal() {
               >
                 ◀
               </button>
-              <span className="text-[11px] font-bold text-[#FFF3D6] truncate whitespace-nowrap">
+              <span className="text-[10.5px] font-bold text-[#FFF3D6] truncate whitespace-nowrap">
                 {currentMantra.text}
               </span>
               <button
@@ -451,7 +449,7 @@ export function MalaModal() {
             {/* Số hạt lớn ở tâm vòng tròn */}
             <div className="relative">
               <span
-                className={`text-4xl sm:text-[44px] font-extrabold tracking-tight transition-transform ${
+                className={`text-4xl sm:text-[42px] font-extrabold tracking-tight transition-transform ${
                   activeRipple ? "scale-110" : "scale-100"
                 }`}
                 style={{
@@ -462,13 +460,13 @@ export function MalaModal() {
               >
                 {malaCount}
               </span>
-              <span className="block text-[10px] font-bold text-[#F6D58A]/85 uppercase tracking-wider -mt-0.5">
+              <span className="block text-[9.5px] font-bold text-[#F6D58A]/85 uppercase tracking-wider -mt-0.5">
                 / 108 HẠT BỒ ĐỀ
               </span>
             </div>
 
             {/* Nút chạm lần hạt ngay trong lòng vòng */}
-            <div className="mt-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#F6D58A]/25 to-[#D9A441]/35 border border-[#F6D58A]/60 text-[10.5px] font-bold text-[#FFF4D2] hover:scale-105 active:scale-95 transition-all shadow-sm whitespace-nowrap">
+            <div className="mt-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#F6D58A]/25 to-[#D9A441]/35 border border-[#F6D58A]/60 text-[10px] font-bold text-[#FFF4D2] hover:scale-105 active:scale-95 transition-all shadow-sm whitespace-nowrap">
               {isCompleted ? "✨ ĐÃ ĐỦ 108 HẠT" : "👉 CHẠM LẦN 1 HẠT"}
             </div>
           </div>

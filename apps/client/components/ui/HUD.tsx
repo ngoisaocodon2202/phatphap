@@ -139,6 +139,7 @@ export function HUD() {
   const currentServerId    = useTempleStore((s) => s.currentServerId);
   const serversList        = useTempleStore((s) => s.serversList);
   const setServerModalOpen = useTempleStore((s) => s.setServerModalOpen);
+  const setLeaderboardModalOpen = useTempleStore((s) => s.setLeaderboardModalOpen);
   const currentServer      = serversList.find((s) => s.id === currentServerId) || serversList[0];
   const currentPilgrimsCount = Math.max(1, remotePlayersCount + 1);
 
@@ -258,33 +259,55 @@ export function HUD() {
   const dockButtons = [
     {
       id: "bow",
-      label: bowCount > 0 ? `Lạy Phật (${bowCount})` : "Lạy Phật",
+      label: (
+        <>
+          <span className="sm:hidden whitespace-nowrap">
+            {bowCount > 0 ? `Lạy (${bowCount})` : "Lạy Phật"}
+          </span>
+          <span className="hidden sm:inline whitespace-nowrap">
+            {bowCount > 0 ? `Lạy Phật (${bowCount})` : "Lạy Phật"}
+          </span>
+        </>
+      ),
       onClick: handleBowClick,
       disabled: localAction === "bow",
       active: localAction === "bow",
     },
     {
       id: "sutra",
-      label: "Đọc Kinh",
+      label: <span className="whitespace-nowrap">Đọc Kinh</span>,
       onClick: handleReadSutraClick,
       disabled: false,
       active: false,
     },
     {
       id: "mala",
-      label:
-        malaCount > 0
-          ? malaCount >= 108
-            ? "Chuỗi Hạt (108/108)"
-            : `Chuỗi Hạt (${malaCount}/108)`
-          : "Đếm Chuỗi Hạt",
+      label: (
+        <>
+          <span className="sm:hidden whitespace-nowrap">
+            {malaCount > 0 ? `Chuỗi (${malaCount})` : "Chuỗi Hạt"}
+          </span>
+          <span className="hidden sm:inline whitespace-nowrap">
+            {malaCount > 0
+              ? malaCount >= 108
+                ? "Chuỗi Hạt (108/108)"
+                : `Chuỗi Hạt (${malaCount}/108)`
+              : "Đếm Chuỗi Hạt"}
+          </span>
+        </>
+      ),
       onClick: handleMalaClick,
       disabled: false,
       active: false,
     },
     {
       id: "lantern",
-      label: "Dâng Hoa Đăng",
+      label: (
+        <>
+          <span className="sm:hidden whitespace-nowrap">Hoa Đăng</span>
+          <span className="hidden sm:inline whitespace-nowrap">Dâng Hoa Đăng</span>
+        </>
+      ),
       onClick: handleOfferLanternClick,
       disabled: false,
       active: false,
@@ -294,9 +317,9 @@ export function HUD() {
   return (
     <div className="pointer-events-none fixed inset-0 z-20 select-none flex flex-col justify-between font-sans overflow-hidden">
       {/* ── 1. THANH HEADER RESPONSIVE MOBILE & DESKTOP (KHÔNG BỊ TAI THỎ / DYNAMIC ISLAND CHE, KHÔNG TRÀN VIỀN) ── */}
-      <header className="pointer-events-auto w-full max-w-full box-border bg-gradient-to-b from-[#1B0D09]/95 via-[#1B0D09]/80 to-transparent backdrop-blur-md border-b border-[#D9A441]/25 px-2.5 sm:px-5 md:px-6 pt-[max(env(safe-area-inset-top),40px)] sm:pt-2.5 pb-2 flex items-center justify-between gap-1 sm:gap-3 whitespace-nowrap">
-        {/* Góc trái: Logo Hoa Sen Vàng + Pháp Danh Phật Tử + Số người hiện diện */}
-        <div className="flex items-center gap-1 sm:gap-3 min-w-0">
+      <header className="temple-safe-header pointer-events-auto w-full max-w-full box-border bg-gradient-to-b from-[#1B0D09]/95 via-[#1B0D09]/80 to-transparent backdrop-blur-md border-b border-[#D9A441]/25 px-2 sm:px-5 md:px-6 pb-2 flex items-center justify-between gap-1 sm:gap-3 whitespace-nowrap flex-nowrap">
+        {/* Góc trái: Logo Hoa Sen Vàng + Pháp Danh Phật Tử + Số người hiện diện + Server + Bảng Tinh Tấn */}
+        <div className="flex items-center gap-1 sm:gap-2.5 min-w-0 shrink-0">
           <div
             onClick={resetCamera}
             className="flex items-center gap-1 sm:gap-2.5 cursor-pointer group shrink-0"
@@ -306,8 +329,8 @@ export function HUD() {
               <LotusBrandIcon className="w-5 h-5 sm:w-8 sm:h-8" />
             </div>
             <div className="whitespace-nowrap">
-              <span className="block font-serif tracking-wide text-[12px] sm:text-base md:text-lg font-bold bg-gradient-to-r from-[#FFF3D1] via-[#F6D58A] to-[#D9A441] bg-clip-text text-transparent whitespace-nowrap leading-tight">
-                SansaTemple
+              <span className="block font-serif tracking-wide text-[11px] sm:text-base md:text-lg font-bold bg-gradient-to-r from-[#FFF3D1] via-[#F6D58A] to-[#D9A441] bg-clip-text text-transparent whitespace-nowrap leading-tight">
+                Sansa<span className="hidden xs:inline">Temple</span>
               </span>
               <p className="hidden sm:block text-[10px] text-[#F7EBD5]/70 tracking-wide font-light whitespace-nowrap">
                 Chánh Điện 100 Bồ Đoàn Thực Tế
@@ -318,14 +341,14 @@ export function HUD() {
           {/* Nút Đổi Tên & Giới Tính Mascot */}
           <button
             onClick={() => setOnboardingCompleted(false)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:pl-2 sm:pr-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0"
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:pl-2 sm:pr-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
             title="Nhấn để đổi Tên / Pháp danh & Giới tính nhân vật"
           >
             <span
               className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-[#F6D58A] shrink-0"
               style={{ background: localPlayer.avatarColor }}
             />
-            <span className="font-semibold text-[#FFF4D2] max-w-[56px] sm:max-w-[140px] truncate whitespace-nowrap">
+            <span className="font-semibold text-[#FFF4D2] max-w-[42px] xs:max-w-[70px] sm:max-w-[140px] truncate whitespace-nowrap">
               {localPlayer.vietnameseName || "Thiện Tâm"}
             </span>
             <span className="text-[10px] text-[#F6D58A]/80 hidden md:inline whitespace-nowrap">
@@ -336,7 +359,7 @@ export function HUD() {
           {/* Số Phật tử đang hiện diện */}
           <button
             onClick={() => setPresenceOpen(!presenceOpen)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#1B0D09]/85 border border-[#D9A441]/35 hover:border-[#F6D58A] px-1.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5]/90 transition-all whitespace-nowrap shrink-0"
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#1B0D09]/85 border border-[#D9A441]/35 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5]/90 transition-all whitespace-nowrap shrink-0"
             title="Danh sách Phật tử đang cùng tu tập"
           >
             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse shrink-0" />
@@ -348,15 +371,30 @@ export function HUD() {
           {/* Nút Hiển Thị & Chuyển Đổi Server / Chánh Điện (Server 1, 2, 3) */}
           <button
             onClick={() => setServerModalOpen(true)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0"
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
             title="Nhấn để đổi Chánh Điện (Server 1, 2, 3) · Tối đa 100 người/server"
           >
             <span className="text-[11px] shrink-0">🏛️</span>
-            <span className="font-semibold text-[#FFF4D2] max-w-[58px] sm:max-w-none truncate">
+            <span className="font-semibold text-[#FFF4D2] max-w-[44px] xs:max-w-[58px] sm:max-w-none truncate whitespace-nowrap">
               {currentServer?.shortName || "C.Đ 01"}
             </span>
-            <span className="text-[9.5px] text-[#F6D58A]/85 bg-black/40 px-1 py-0.2 rounded-full border border-[#D9A441]/30 hidden xs:inline">
+            <span className="text-[9.5px] text-[#F6D58A]/85 bg-black/40 px-1 py-0.2 rounded-full border border-[#D9A441]/30 hidden xs:inline whitespace-nowrap">
               {currentPilgrimsCount}/100
+            </span>
+          </button>
+
+          {/* Nút Mở Bảng Vàng Tinh Tấn, Tu Tập Ký & Tường Cầu An */}
+          <button
+            onClick={() => setLeaderboardModalOpen(true)}
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F6D58A] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0 shrink-0"
+            title="Mở Bảng Vàng Tinh Tấn, Tu Tập Ký & Tường Cầu An"
+          >
+            <span className="text-[11px] sm:text-[12px] shrink-0">🏆</span>
+            <span className="font-semibold text-[#FFF4D2] hidden sm:inline whitespace-nowrap">
+              Bảng Tinh Tấn
+            </span>
+            <span className="font-semibold text-[#FFF4D2] sm:hidden whitespace-nowrap">
+              Tinh Tấn
             </span>
           </button>
         </div>

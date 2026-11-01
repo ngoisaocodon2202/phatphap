@@ -20,3 +20,13 @@ canvas { display: block; }
   border: 1px solid rgba(251, 191, 36, 0.2);
   border-radius: 0.75rem;
 }
+
+/* Header an toàn cho tai thỏ / Dynamic Island trên mọi dòng điện thoại iOS / Android */
+.temple-safe-header {
+  padding-top: max(env(safe-area-inset-top, 0px), 44px);
+}
+@media (min-width: 640px) {
+  .temple-safe-header {
+    padding-top: 10px;
+  }
+}

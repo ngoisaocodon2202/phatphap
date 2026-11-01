@@ -211,6 +211,130 @@ export const INITIAL_SERVERS: TempleServerInfo[] = [
   },
 ];
 
+// ── BẢNG VÀNG TINH TẤN & ĐẠO TRÀNG TU HỌC ──
+export interface DiligencePilgrim {
+  id: string;
+  name: string;
+  gender: PilgrimGender;
+  avatarColor: string;
+  serverName: string;
+  title: string; // "Chánh Niệm Tinh Tấn" | "Thiền Tâm An Lạc" | "Bồ Đề Tâm Nguyện"
+  points: number; // Điểm Tinh Tấn
+  meditationMinutes: number; // Số phút tĩnh tâm
+  beadsChanted: number; // Số hạt chuỗi đã lần
+  bowsCount: number; // Số lạy Phật
+  rejoicesCount: number; // Số lượt được đồng đạo Tùy Hỷ
+  isSelf?: boolean;
+}
+
+export interface CommunityWish {
+  id: string;
+  author: string;
+  content: string;
+  timeAgo: string;
+  rejoiceCount: number;
+  hasRejoiced?: boolean;
+}
+
+export const INITIAL_LEADERBOARD: DiligencePilgrim[] = [
+  {
+    id: "p-1",
+    name: "Minh An",
+    gender: "male",
+    avatarColor: "#7A8B9E",
+    serverName: "C.Đ 01",
+    title: "Bồ Đề Tâm Nguyện",
+    points: 2480,
+    meditationMinutes: 142,
+    beadsChanted: 324,
+    bowsCount: 48,
+    rejoicesCount: 86,
+  },
+  {
+    id: "p-2",
+    name: "Diệu Đức",
+    gender: "female",
+    avatarColor: "#7C4D2B",
+    serverName: "C.Đ 01",
+    title: "Chánh Niệm Tinh Tấn",
+    points: 1920,
+    meditationMinutes: 115,
+    beadsChanted: 216,
+    bowsCount: 36,
+    rejoicesCount: 64,
+  },
+  {
+    id: "p-3",
+    name: "Tịnh Liên",
+    gender: "female",
+    avatarColor: "#D98A2B",
+    serverName: "C.Đ 02",
+    title: "Chánh Niệm Tinh Tấn",
+    points: 1540,
+    meditationMinutes: 90,
+    beadsChanted: 108,
+    bowsCount: 24,
+    rejoicesCount: 52,
+  },
+  {
+    id: "p-4",
+    name: "Thiện Trí",
+    gender: "male",
+    avatarColor: "#7A8B9E",
+    serverName: "C.Đ 01",
+    title: "Thiền Tâm An Lạc",
+    points: 1180,
+    meditationMinutes: 68,
+    beadsChanted: 108,
+    bowsCount: 18,
+    rejoicesCount: 39,
+  },
+  {
+    id: "p-5",
+    name: "An Nhiên",
+    gender: "female",
+    avatarColor: "#7C4D2B",
+    serverName: "C.Đ 03",
+    title: "Thiền Tâm An Lạc",
+    points: 860,
+    meditationMinutes: 52,
+    beadsChanted: 108,
+    bowsCount: 12,
+    rejoicesCount: 27,
+  },
+];
+
+export const INITIAL_WISHES: CommunityWish[] = [
+  {
+    id: "w-1",
+    author: "Diệu Tâm",
+    content: "Nguyện cầu cha mẹ hai bên sống lâu trăm tuổi, thân tâm an lạc, tai qua nạn khỏi.",
+    timeAgo: "15 phút trước",
+    rejoiceCount: 38,
+  },
+  {
+    id: "w-2",
+    author: "Minh An",
+    content: "Nguyện cho tất cả chúng sinh dứt trừ khổ não, mưa thuận gió hòa, thế giới hòa bình.",
+    timeAgo: "42 phút trước",
+    rejoiceCount: 52,
+  },
+  {
+    id: "w-3",
+    author: "Tịnh Liên",
+    content: "Cầu an cho các y bác sĩ và bệnh nhân nơi bệnh viện mau lành bệnh, vạn sự cát tường.",
+    timeAgo: "1 giờ trước",
+    rejoiceCount: 29,
+  },
+  {
+    id: "w-4",
+    author: "Thiện Đức",
+    content: "Nguyện cho tâm con luôn vững chãi, buông xả hờn giận, sống trọn vẹn từng phút giây hiện tại.",
+    timeAgo: "2 giờ trước",
+    rejoiceCount: 41,
+  },
+];
+
 export interface TempleStore {
   // Connection
   connected: boolean;
@@ -341,6 +465,25 @@ export interface TempleStore {
   decrementMala: () => void;
   setMalaCount: (count: number) => void;
   resetMala: () => void;
+
+  // ── Bảng Vàng Tinh Tấn, Tu Tập Ký & Tường Cầu An ──
+  leaderboardModalOpen: boolean;
+  setLeaderboardModalOpen: (open: boolean) => void;
+  activeLeaderboardTab: "rankings" | "diary" | "wishes";
+  setActiveLeaderboardTab: (tab: "rankings" | "diary" | "wishes") => void;
+
+  spiritualStats: {
+    meditationSeconds: number;
+    rejoiceCount: number;
+    lanternsOffered: number;
+    incenseOffered: number;
+  };
+  tickMeditationSecond: () => void;
+  rejoicePilgrim: (pilgrimId: string) => void;
+  leaderboardPilgrims: DiligencePilgrim[];
+  wishesList: CommunityWish[];
+  addCommunityWish: (content: string) => void;
+  rejoiceWish: (wishId: string) => void;
 
   // Navigation & Rituals
   startNavigateToCushion: (purpose: "bow" | "sit") => void;
@@ -505,6 +648,63 @@ export const useTempleStore = create<TempleStore>((set, get) => ({
   malaModalOpen: false,
   sutraModalOpen: false,
   prayerModalOpen: false,
+
+  // ── Bảng Vàng Tinh Tấn, Tu Tập Ký & Tường Cầu An ──
+  leaderboardModalOpen: false,
+  setLeaderboardModalOpen: (leaderboardModalOpen) => set({ leaderboardModalOpen }),
+  activeLeaderboardTab: "rankings",
+  setActiveLeaderboardTab: (activeLeaderboardTab) => set({ activeLeaderboardTab }),
+
+  spiritualStats: {
+    meditationSeconds: 120, // khởi tạo 2 phút
+    rejoiceCount: 8,
+    lanternsOffered: 1,
+    incenseOffered: 1,
+  },
+  tickMeditationSecond: () =>
+    set((s) => ({
+      spiritualStats: {
+        ...s.spiritualStats,
+        meditationSeconds: s.spiritualStats.meditationSeconds + 1,
+      },
+    })),
+
+  leaderboardPilgrims: INITIAL_LEADERBOARD,
+  rejoicePilgrim: (pilgrimId) => {
+    set((s) => ({
+      leaderboardPilgrims: s.leaderboardPilgrims.map((p) =>
+        p.id === pilgrimId
+          ? { ...p, rejoicesCount: p.rejoicesCount + 1, points: p.points + 2 }
+          : p
+      ),
+    }));
+  },
+
+  wishesList: INITIAL_WISHES,
+  addCommunityWish: (content) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+    const author = get().localPlayer.vietnameseName || "Phật tử ẩn danh";
+    const newWish: CommunityWish = {
+      id: `w-${Date.now()}`,
+      author,
+      content: trimmed,
+      timeAgo: "Vừa xong",
+      rejoiceCount: 1,
+    };
+    set((s) => ({
+      wishesList: [newWish, ...s.wishesList],
+    }));
+  },
+  rejoiceWish: (wishId) => {
+    set((s) => ({
+      wishesList: s.wishesList.map((w) =>
+        w.id === wishId
+          ? { ...w, rejoiceCount: w.rejoiceCount + 1, hasRejoiced: true }
+          : w
+      ),
+    }));
+  },
 
   audioTrack: "chant",
   audioPlaying: false,

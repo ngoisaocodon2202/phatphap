@@ -43,6 +43,11 @@ const ServerModal = dynamic(
   { ssr: false }
 );
 
+const LeaderboardModal = dynamic(
+  () => import("@/components/ui/LeaderboardModal").then((m) => ({ default: m.LeaderboardModal })),
+  { ssr: false }
+);
+
 function TempleLoader() {
   return (
     <div className="flex h-[100dvh] items-center justify-center bg-[#1B0D09] font-sans px-4">
@@ -81,6 +86,7 @@ function TempleContent() {
       <SutraModal />
       <OnboardingModal />
       <ServerModal />
+      <LeaderboardModal />
     </div>
   );
 }

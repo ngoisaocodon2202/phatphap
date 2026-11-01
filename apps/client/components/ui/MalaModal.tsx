@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTempleStore } from "@/stores/templeStore";
 
 // ── BỘ TỔNG HỢP ÂM THANH TIẾNG HẠT GỖ TRẦM HƯƠNG & CHUÔNG VIÊN MÃN (WEB AUDIO API) ──
@@ -25,7 +25,7 @@ class MalaAudioEngine {
       const ctx = this.ctx;
       const t = ctx.currentTime;
 
-      // 1. Xung va chạm âm cao đầu tiên (Click transient ~1300Hz)
+      // 1. Xung va chạm âm cao đầu tiên (Click transient ~1250Hz)
       const oscClick = ctx.createOscillator();
       const gainClick = ctx.createGain();
       oscClick.type = "sine";
@@ -33,7 +33,7 @@ class MalaAudioEngine {
       oscClick.frequency.setValueAtTime(freq, t);
       oscClick.frequency.exponentialRampToValueAtTime(340, t + 0.032);
 
-      gainClick.gain.setValueAtTime(0.42, t);
+      gainClick.gain.setValueAtTime(0.38, t);
       gainClick.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
 
       oscClick.connect(gainClick);
@@ -41,7 +41,7 @@ class MalaAudioEngine {
       oscClick.start(t);
       oscClick.stop(t + 0.038);
 
-      // 2. Độ cộng hưởng thớ gỗ trầm đầm ấm (Body resonance 650Hz -> 200Hz)
+      // 2. Độ cộng hưởng thớ gỗ trầm đầm ấm (Body resonance)
       const oscBody = ctx.createOscillator();
       const gainBody = ctx.createGain();
       const filter = ctx.createBiquadFilter();
@@ -54,7 +54,7 @@ class MalaAudioEngine {
       oscBody.frequency.setValueAtTime(760, t);
       oscBody.frequency.exponentialRampToValueAtTime(210, t + 0.065);
 
-      gainBody.gain.setValueAtTime(0.32, t);
+      gainBody.gain.setValueAtTime(0.28, t);
       gainBody.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
 
       oscBody.connect(filter);
@@ -113,115 +113,67 @@ export function MalaModal() {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mantraIdx, setMantraIdx] = useState(0);
-  const [slideOffset, setSlideOffset] = useState(0); // Offset chuyển động hạt khi scroll/drag
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [activeRipple, setActiveRipple] = useState(false);
 
-  // Throttling để mỗi lần cuộn chuột/lướt ngón tay trượt đúng 1 hạt ("từng 1 hạt")
-  const lastScrollTime = useRef(0);
-  const touchStartY = useRef<number | null>(null);
-  const touchCurrentY = useRef<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Chống giữ nút/giữ phím đếm liên tục: mỗi lần bấm chỉ lần đúng 1 hạt
+  const lastActionTime = useRef(0);
 
-  // Thực hiện lần 1 hạt (tiến tới)
+  // ── LẦN ĐÚNG 1 HẠT (CHỈ TỪNG HẠT MỘT, KHÔNG TỰ ĐỘNG LẶP) ──
   const advanceOneBead = useCallback(() => {
-    if (malaCount >= 108) return; // Đủ 108 hạt thì dừng lại, không tăng nữa
+    const now = Date.now();
+    // Ngăn chặn giữ nút hoặc spam phím: tối thiểu 160ms giữa 2 lần nhấn
+    if (now - lastActionTime.current < 160) return;
+    lastActionTime.current = now;
+
+    if (malaCount >= 108) return; // Đã đủ 108 hạt thì dừng lại
 
     if (soundEnabled) {
       malaSoundEngine.playBeadClack();
     }
-    // Rung phản hồi cảm ứng trên di động (haptic feedback)
+    // Rung nhẹ cảm ứng trên điện thoại
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate(22);
       } catch {}
     }
 
-    setSlideOffset(-32);
-    setIsAnimating(true);
+    setActiveRipple(true);
     incrementMala();
-
-    setTimeout(() => {
-      setSlideOffset(0);
-      setIsAnimating(false);
-    }, 140);
+    setTimeout(() => setActiveRipple(false), 200);
   }, [malaCount, soundEnabled, incrementMala]);
 
-  // Thực hiện lùi 1 hạt
+  // Lùi lại 1 hạt
   const stepBackOneBead = useCallback(() => {
+    const now = Date.now();
+    if (now - lastActionTime.current < 160) return;
+    lastActionTime.current = now;
+
     if (malaCount <= 0) return;
 
     if (soundEnabled) {
       malaSoundEngine.playBeadClack();
     }
-    setSlideOffset(32);
-    setIsAnimating(true);
     decrementMala();
-
-    setTimeout(() => {
-      setSlideOffset(0);
-      setIsAnimating(false);
-    }, 140);
   }, [malaCount, soundEnabled, decrementMala]);
 
-  // Xử lý khi đạt 108 hạt
+  // Ngân chuông khi viên mãn 108 hạt
   useEffect(() => {
     if (malaCount === 108 && soundEnabled) {
       malaSoundEngine.playCompletionBell();
     }
   }, [malaCount, soundEnabled]);
 
-  // ── XỬ LÝ SCROLL TRÊN DESKTOP (CHUỘT / TRACKPAD CUỘN TỪNG 1 HẠT) ──
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const now = Date.now();
-      // Ngăn chặn scroll quá nhanh: mỗi nấc cuộn cách nhau tối thiểu 110ms để trượt rõ từng hạt
-      if (now - lastScrollTime.current < 110) return;
-      lastScrollTime.current = now;
-
-      if (e.deltaY > 0) {
-        advanceOneBead();
-      } else if (e.deltaY < 0) {
-        stepBackOneBead();
-      }
-    },
-    [advanceOneBead, stepBackOneBead]
-  );
-
-  // ── XỬ LÝ VUỐT TRÊN MOBILE (TOUCH SWIPE TRƯỢT TỪNG 1 HẠT) ──
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-    touchCurrentY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current === null) return;
-    touchCurrentY.current = e.touches[0].clientY;
-    const dy = touchCurrentY.current - touchStartY.current;
-
-    // Khi ngón tay kéo trượt được ~32px, thực hiện lần đúng 1 hạt rồi reset anchor
-    if (dy < -32) {
-      advanceOneBead();
-      touchStartY.current = touchCurrentY.current;
-    } else if (dy > 32) {
-      stepBackOneBead();
-      touchStartY.current = touchCurrentY.current;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    touchStartY.current = null;
-    touchCurrentY.current = null;
-  };
-
-  // Hỗ trợ phím mũi tên và Spacebar trên Desktop
+  // Hỗ trợ phím Space / Enter / Mũi tên: TUYỆT ĐỐI KHÔNG TỰ LẶP KHI GIỮ PHÍM (e.repeat = false)
   useEffect(() => {
     if (!malaModalOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown" || e.key === " " || e.key === "Enter") {
+      // Bỏ qua hoàn toàn sự kiện lặp khi người dùng đè giữ phím
+      if (e.repeat) return;
+
+      if (e.key === " " || e.key === "Enter" || e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
         advanceOneBead();
-      } else if (e.key === "ArrowUp") {
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault();
         stepBackOneBead();
       }
@@ -230,27 +182,46 @@ export function MalaModal() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [malaModalOpen, advanceOneBead, stepBackOneBead]);
 
+  // ── TÍNH TOÁN TỌA ĐỘ 108 HẠT TRÊN VÒNG TRÒN CHUỖI HẠT (HÌNH CÁI VÒNG) ──
+  const TOTAL_BEADS = 108;
+  const CENTER_X = 150;
+  const CENTER_Y = 145;
+  const RADIUS = 118;
+
+  const beads = useMemo(() => {
+    return Array.from({ length: TOTAL_BEADS }, (_, i) => {
+      const beadNum = i + 1;
+      // Bắt đầu từ góc 90 độ (đáy dưới là Hạt Mẹ) chạy tròn theo chiều kim đồng hồ
+      const angleDeg = 90 + (beadNum / TOTAL_BEADS) * 360;
+      const angleRad = (angleDeg * Math.PI) / 180;
+      const cx = CENTER_X + RADIUS * Math.cos(angleRad);
+      const cy = CENTER_Y + RADIUS * Math.sin(angleRad);
+      return {
+        num: beadNum,
+        cx,
+        cy,
+        isGuru: beadNum === 108,
+      };
+    });
+  }, []);
+
   if (!malaModalOpen) return null;
 
   const currentMantra = MANTRAS[mantraIdx];
   const isCompleted = malaCount >= 108;
-
-  // Tính toán 7 hạt trên dòng tràng hạt (3 hạt phía trước, 1 hạt trung tâm, 3 hạt phía sau)
-  const currentBeadNum = malaCount === 0 ? 1 : malaCount;
-  const beadIndices = [-3, -2, -1, 0, 1, 2, 3];
 
   return (
     <div
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 65,
+        zIndex: 85,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "16px",
-        background: "radial-gradient(circle at 50% 50%, rgba(26, 12, 6, 0.82) 0%, rgba(8, 4, 2, 0.94) 100%)",
-        backdropFilter: "blur(16px)",
+        padding: "12px",
+        background: "rgba(10, 5, 2, 0.82)",
+        backdropFilter: "blur(18px)",
         fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
       }}
       onClick={() => setMalaModalOpen(false)}
@@ -259,312 +230,283 @@ export function MalaModal() {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
-          maxWidth: "460px",
+          maxWidth: "420px",
           background:
-            "linear-gradient(180deg, rgba(62, 44, 30, 0.96) 0%, rgba(32, 20, 12, 0.98) 100%)",
+            "linear-gradient(180deg, rgba(58, 42, 30, 0.96) 0%, rgba(28, 18, 12, 0.98) 100%)",
           backdropFilter: "blur(24px)",
-          border: "2px solid rgba(235, 195, 112, 0.8)",
-          borderRadius: "26px",
-          padding: "24px 20px 20px",
+          border: "1.8px solid rgba(235, 195, 112, 0.8)",
+          borderRadius: "24px",
+          padding: "16px 18px 18px",
           boxShadow:
-            "0 28px 75px rgba(0, 0, 0, 0.9), 0 0 45px rgba(217, 164, 65, 0.3), inset 0 1px 0 rgba(255, 244, 210, 0.45)",
+            "0 28px 75px rgba(0, 0, 0, 0.9), 0 0 45px rgba(217, 164, 65, 0.28)",
           color: "#F7EBD5",
           position: "relative",
           boxSizing: "border-box",
           userSelect: "none",
         }}
       >
-        {/* Nút đóng */}
+        {/* Nút đóng góc phải */}
         <button
           type="button"
           onClick={() => setMalaModalOpen(false)}
-          className="absolute top-4 right-4 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 border border-[#D9A441]/45 text-[#F6D58A] flex items-center justify-center text-sm transition-all"
+          className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 border border-[#D9A441]/45 text-[#F6D58A] flex items-center justify-center text-sm transition-all z-10"
         >
           ✕
         </button>
 
-        {/* Nút Bật/Tắt Tiếng Lách Cách Của Hạt Gỗ */}
+        {/* Nút Bật/Tắt Tiếng Gỗ góc trái */}
         <button
           type="button"
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-all ${
+          className={`absolute top-3.5 left-3.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all z-10 ${
             soundEnabled
               ? "bg-[#D9A441]/25 border-[#F6D58A] text-[#FFF4D2]"
               : "bg-black/40 border-white/20 text-[#F7EBD5]/60"
           }`}
-          title={soundEnabled ? "Tắt tiếng hạt" : "Bật tiếng hạt"}
+          title={soundEnabled ? "Tắt tiếng hạt gỗ" : "Bật tiếng hạt gỗ"}
         >
           <span>{soundEnabled ? "🔊" : "🔇"}</span>
-          <span className="hidden sm:inline font-medium">
-            {soundEnabled ? "Tiếng hạt: Bật" : "Tiếng hạt: Tắt"}
+          <span className="font-medium whitespace-nowrap">
+            {soundEnabled ? "Âm thanh" : "Tắt âm"}
           </span>
         </button>
 
-        {/* Tiêu đề & Chọn Câu Niệm Phật */}
-        <div className="text-center mt-2 mb-3">
-          <h2 className="text-lg sm:text-xl font-bold text-[#F8DFA1] tracking-wide flex items-center justify-center gap-2">
+        {/* Tiêu đề thanh tịnh */}
+        <div className="text-center pt-1 mb-1">
+          <h2 className="text-base sm:text-lg font-bold text-[#F8DFA1] tracking-wide flex items-center justify-center gap-1.5 whitespace-nowrap">
             <span>📿</span>
-            <span>LẦN TRÀNG HẠT 108 HẠT</span>
+            <span>CHUỖI 108 HẠT BỒ ĐỀ</span>
           </h2>
-
-          {/* Chọn Danh Hiệu Niệm Phật */}
-          <div className="mt-2 inline-flex items-center gap-2 bg-[#26150D]/90 border border-[#D9A441]/40 rounded-full px-3 py-1 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setMantraIdx((mantraIdx + MANTRAS.length - 1) % MANTRAS.length)}
-              className="text-[#F6D58A] hover:scale-125 px-1 font-bold text-xs"
-            >
-              ◀
-            </button>
-            <div className="text-center min-w-[170px] sm:min-w-[200px]">
-              <div className="text-xs sm:text-[13px] font-bold text-[#FFF3D6] leading-tight">
-                {currentMantra.text}
-              </div>
-              <div className="text-[9.5px] text-[#F6D58A]/75">{currentMantra.sub}</div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMantraIdx((mantraIdx + 1) % MANTRAS.length)}
-              className="text-[#F6D58A] hover:scale-125 px-1 font-bold text-xs"
-            >
-              ▶
-            </button>
-          </div>
         </div>
 
-        {/* ── VÒNG TRÒN TIẾN TRÌNH 108 HẠT TRÀNG TOÀN CẢNH ── */}
-        <div className="relative flex items-center justify-center py-1">
-          <svg width="220" height="48" viewBox="0 0 220 48" className="overflow-visible">
-            {/* Vòng cong chuỗi hạt */}
-            <path
-              d="M 15,24 Q 110,4 205,24"
+        {/* ── HÌNH CÁI VÒNG CHUỖI HẠT TRÒN THẬT 108 HẠT ── */}
+        <div className="relative flex items-center justify-center my-1">
+          <svg
+            width="300"
+            height="315"
+            viewBox="0 0 300 315"
+            className="overflow-visible select-none pointer-events-none"
+          >
+            <defs>
+              {/* Gradient hạt đã lần niệm (Vàng hổ phách tỏa sáng) */}
+              <radialGradient id="chantedBead" cx="35%" cy="32%" r="65%">
+                <stop offset="0%" stopColor="#FFF2C6" />
+                <stop offset="40%" stopColor="#F6D58A" />
+                <stop offset="75%" stopColor="#C98B20" />
+                <stop offset="100%" stopColor="#6C410A" />
+              </radialGradient>
+
+              {/* Gradient hạt đang niệm hiện tại (Hào quang vàng rực) */}
+              <radialGradient id="activeBead" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="30%" stopColor="#FFF3CE" />
+                <stop offset="65%" stopColor="#F59E0B" />
+                <stop offset="100%" stopColor="#B45309" />
+              </radialGradient>
+
+              {/* Gradient hạt gỗ trầm chưa lần (Màu gỗ mun/trầm ấm tự nhiên) */}
+              <radialGradient id="unchantedBead" cx="35%" cy="32%" r="65%">
+                <stop offset="0%" stopColor="#9C6B3E" />
+                <stop offset="45%" stopColor="#5E381A" />
+                <stop offset="85%" stopColor="#381E0B" />
+                <stop offset="100%" stopColor="#1E0D04" />
+              </radialGradient>
+
+              {/* Gradient Hạt Mẹ (Guru Bead) */}
+              <radialGradient id="guruBeadGrad" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#FFFBEB" />
+                <stop offset="35%" stopColor="#FBBF24" />
+                <stop offset="75%" stopColor="#B45309" />
+                <stop offset="100%" stopColor="#451A03" />
+              </radialGradient>
+            </defs>
+
+            {/* Sợi dây tơ xỏ liên kết trọn vẹn thành 1 vòng tròn */}
+            <circle
+              cx={CENTER_X}
+              cy={CENTER_Y}
+              r={RADIUS}
               fill="none"
-              stroke="#8B5A2B"
-              strokeWidth="2.5"
-              strokeDasharray="4 3"
+              stroke="#8C5815"
+              strokeWidth="2.2"
               opacity="0.65"
             />
-            {/* Hiển thị các chấm biểu tượng cho tiến trình 108 hạt */}
-            {Array.from({ length: 36 }).map((_, i) => {
-              const progressRatio = (i + 1) / 36;
-              const isChanted = malaCount / 108 >= progressRatio;
-              const t = i / 35;
-              // Điểm trên đường cong Bezier
-              const px = 15 + t * 190;
-              const py = (1 - t) * (1 - t) * 24 + 2 * (1 - t) * t * 4 + t * t * 24;
+
+            {/* Vẽ toàn bộ 108 Hạt Tràng đều đặn quanh vòng tròn */}
+            {beads.map((bead) => {
+              const isChanted = bead.num <= malaCount;
+              const isActive = bead.num === malaCount;
+              const isGuru = bead.isGuru;
+
+              let r = 3.6;
+              let fill = "url(#unchantedBead)";
+              let stroke = "#542E12";
+              let strokeWidth = 0.8;
+
+              if (isGuru) {
+                r = isCompleted ? 8.5 : 7.5;
+                fill = isCompleted ? "url(#guruBeadGrad)" : "url(#unchantedBead)";
+                stroke = isCompleted ? "#FFF0B3" : "#784419";
+                strokeWidth = 1.4;
+              } else if (isActive) {
+                r = 6.2;
+                fill = "url(#activeBead)";
+                stroke = "#FFFFFF";
+                strokeWidth = 1.5;
+              } else if (isChanted) {
+                r = 4.2;
+                fill = "url(#chantedBead)";
+                stroke = "#FDE68A";
+                strokeWidth = 0.9;
+              }
 
               return (
-                <circle
-                  key={i}
-                  cx={px}
-                  cy={py}
-                  r={isChanted ? 3.2 : 2.2}
-                  fill={isChanted ? "#F6D58A" : "#4A2B15"}
-                  stroke={isChanted ? "#FFEBA6" : "#724722"}
-                  strokeWidth={0.8}
-                  style={{
-                    filter: isChanted ? "drop-shadow(0 0 4px #F6D58A)" : "none",
-                    transition: "all 0.2s ease",
-                  }}
-                />
-              );
-            })}
-          </svg>
-        </div>
-
-        {/* ── DÒNG HẠT THẬT (TƯƠNG TÁC SCROLL / TOUCH VUỐT TỪNG 1 HẠT) ── */}
-        <div
-          ref={containerRef}
-          onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="relative my-2 py-4 flex flex-col items-center justify-center cursor-ns-resize touch-none select-none overflow-hidden rounded-2xl"
-          style={{
-            background: "radial-gradient(ellipse at 50% 50%, rgba(45, 28, 18, 0.75) 0%, rgba(20, 10, 6, 0.95) 100%)",
-            border: "1.5px solid rgba(217, 164, 65, 0.4)",
-            boxShadow: "inset 0 4px 20px rgba(0, 0, 0, 0.75)",
-            height: "230px",
-          }}
-          title="Cuộn chuột hoặc vuốt ngón tay lên/xuống để lần từng hạt"
-        >
-          {/* Sợi dây tơ vàng xỏ xuyên suốt qua tâm các hạt chuỗi */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: "50%",
-              width: "4px",
-              transform: "translateX(-50%)",
-              background: "linear-gradient(180deg, #A87625 0%, #F6D58A 50%, #8C5815 100%)",
-              boxShadow: "0 0 8px rgba(246, 213, 138, 0.6)",
-              borderRadius: "999px",
-              zIndex: 1,
-            }}
-          />
-
-          {/* Khung tiêu điểm Hoàng Kim đánh dấu Hạt Chuỗi Đang Lần */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "106px",
-              height: "106px",
-              borderRadius: "999px",
-              border: "1.8px dashed rgba(246, 213, 138, 0.8)",
-              boxShadow: "0 0 24px rgba(246, 213, 138, 0.35), inset 0 0 16px rgba(246, 213, 138, 0.2)",
-              pointerEvents: "none",
-              zIndex: 2,
-              animation: "pulse 2.2s infinite",
-            }}
-          />
-
-          {/* Dòng hạt di chuyển mượt mà */}
-          <div
-            className="flex flex-col items-center justify-center relative w-full h-full"
-            style={{
-              transform: `translateY(${slideOffset}px)`,
-              transition: isAnimating ? "transform 0.12s ease-out" : "none",
-              zIndex: 3,
-            }}
-          >
-            {beadIndices.map((relIdx) => {
-              const beadNum = currentBeadNum + relIdx;
-              if (beadNum < 1 || beadNum > 108) return null;
-
-              const isCenter = relIdx === 0;
-              const isGuruBead = beadNum === 108; // Hạt Mẹ / Hồ Lô Phật Đầu
-
-              // Kích thước hạt co giãn theo khoảng cách từ tâm (hiệu ứng 3D sâu)
-              const absDist = Math.abs(relIdx);
-              const beadSize = isCenter ? 84 : absDist === 1 ? 58 : absDist === 2 ? 44 : 32;
-              const beadOpacity = isCenter ? 1 : absDist === 1 ? 0.82 : absDist === 2 ? 0.55 : 0.25;
-
-              return (
-                <div
-                  key={beadNum}
-                  onClick={() => {
-                    if (isCenter) advanceOneBead();
-                    else if (relIdx > 0) advanceOneBead();
-                    else stepBackOneBead();
-                  }}
-                  className="flex items-center justify-center relative my-1 cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                  style={{
-                    width: `${beadSize}px`,
-                    height: `${beadSize}px`,
-                    borderRadius: "999px",
-                    opacity: beadOpacity,
-                    // Kết cấu khối cầu gỗ trầm hương 3D chân thực
-                    background: isGuruBead
-                      ? "radial-gradient(circle at 35% 32%, #FFE5A3 0%, #D99B26 40%, #8C5512 75%, #3E1E05 100%)"
-                      : "radial-gradient(circle at 35% 32%, #FBE3B5 0%, #9C6332 38%, #5A3315 72%, #2A1406 100%)",
-                    border: isCenter
-                      ? "2.5px solid #FFF3D6"
-                      : "1.4px solid rgba(246, 213, 138, 0.45)",
-                    boxShadow: isCenter
-                      ? "0 10px 28px rgba(0, 0, 0, 0.8), 0 0 20px rgba(246, 213, 138, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6)"
-                      : "0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.3)",
-                    flexShrink: 0,
-                  }}
-                >
-                  {/* Lỗ xỏ chỉ tâm hạt */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#180A04] opacity-80" />
-
-                  {/* Số thứ tự hạt hiển thị trang nhã bằng màu vàng kim */}
-                  <div className="relative text-center pointer-events-none">
-                    <span
-                      style={{
-                        fontSize: isCenter ? "21px" : absDist === 1 ? "13px" : "10px",
-                        fontWeight: 800,
-                        fontFamily: "serif",
-                        color: isGuruBead ? "#FFF8E7" : "#FFF4D2",
-                        textShadow: "0 2px 6px rgba(0, 0, 0, 0.85)",
-                        lineHeight: 1,
-                      }}
-                    >
-                      {beadNum}
-                    </span>
-                    {isCenter && (
-                      <span className="block text-[9px] uppercase tracking-wider text-[#FCE6A9] font-semibold mt-0.5">
-                        {isGuruBead ? "Hạt Mẹ" : "Hạt Tràng"}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Tua rua tơ lụa đỏ vàng treo ở Hạt Mẹ (#108) */}
-                  {isGuruBead && isCenter && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "-24px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: "16px",
-                        height: "22px",
-                        background: "linear-gradient(180deg, #DC2626 0%, #B91C1C 70%, #D97706 100%)",
-                        borderRadius: "2px 2px 6px 6px",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
-                      }}
+                <g key={bead.num}>
+                  {/* Hiệu ứng hào quang phát sáng ở hạt hiện tại */}
+                  {isActive && (
+                    <circle
+                      cx={bead.cx}
+                      cy={bead.cy}
+                      r={10.5}
+                      fill="none"
+                      stroke="#F6D58A"
+                      strokeWidth="1.6"
+                      opacity="0.75"
+                      className="animate-ping"
+                      style={{ animationDuration: "1.8s" }}
                     />
                   )}
-                </div>
+                  <circle
+                    cx={bead.cx}
+                    cy={bead.cy}
+                    r={r}
+                    fill={fill}
+                    stroke={stroke}
+                    strokeWidth={strokeWidth}
+                    style={{
+                      filter: isActive || (isGuru && isCompleted) ? "drop-shadow(0 0 5px #F6D58A)" : "none",
+                      transition: "all 0.15s ease",
+                    }}
+                  />
+                </g>
               );
             })}
-          </div>
 
-          {/* Gợi ý thao tác cuộn */}
-          <div className="absolute bottom-2 inset-x-0 flex items-center justify-center gap-1.5 text-[10px] text-[#F7EBD5]/75 pointer-events-none">
-            <span>🖱️ Cuộn chuột</span>
-            <span>·</span>
-            <span>👆 Vuốt ngón tay</span>
-            <span>·</span>
-            <span>Chạm hạt để lần</span>
+            {/* Tua rua lụa đỏ vàng treo ở Hạt Mẹ (Guru Bead) phía đáy vòng tròn */}
+            <g transform={`translate(${CENTER_X}, ${CENTER_Y + RADIUS + 5})`}>
+              {/* Thắt nút hoa sen hồ lô */}
+              <rect x="-3" y="0" width="6" height="5" rx="1.5" fill="#D97706" stroke="#FDE68A" strokeWidth="0.8" />
+              {/* Dải tua rua đỏ thắm trang nghiêm */}
+              <path
+                d="M-5,5 L5,5 L7,34 L-7,34 Z"
+                fill="url(#tasselGrad)"
+              />
+              <linearGradient id="tasselGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#DC2626" />
+                <stop offset="60%" stopColor="#B91C1C" />
+                <stop offset="90%" stopColor="#D97706" />
+                <stop offset="100%" stopColor="#FBBF24" />
+              </linearGradient>
+            </g>
+          </svg>
+
+          {/* ── BỐ CỤC TRUNG TÂM NẰM TRỌN TRONG LÒNG VÒNG TRÒN ── */}
+          <div
+            className="absolute flex flex-col items-center justify-center text-center cursor-pointer select-none"
+            style={{
+              width: "186px",
+              height: "186px",
+              borderRadius: "999px",
+              background: "radial-gradient(circle at 50% 50%, rgba(42, 26, 17, 0.75) 0%, rgba(18, 10, 6, 0.95) 100%)",
+              border: "1.2px solid rgba(217, 164, 65, 0.35)",
+              boxShadow: "inset 0 0 24px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 0, 0, 0.6)",
+            }}
+            onClick={advanceOneBead}
+            title="Nhấn vào đây để lần 1 hạt (hoặc nhấn nút bên dưới)"
+          >
+            {/* Chọn Câu Niệm Phật */}
+            <div
+              className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-black/40 border border-[#D9A441]/30 max-w-[170px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setMantraIdx((mantraIdx + MANTRAS.length - 1) % MANTRAS.length)}
+                className="text-[#F6D58A] hover:scale-125 px-1 font-bold text-[11px]"
+              >
+                ◀
+              </button>
+              <span className="text-[11px] font-bold text-[#FFF3D6] truncate whitespace-nowrap">
+                {currentMantra.text}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMantraIdx((mantraIdx + 1) % MANTRAS.length)}
+                className="text-[#F6D58A] hover:scale-125 px-1 font-bold text-[11px]"
+              >
+                ▶
+              </button>
+            </div>
+
+            {/* Số hạt lớn ở tâm vòng tròn */}
+            <div className="relative">
+              <span
+                className={`text-4xl sm:text-[44px] font-extrabold tracking-tight transition-transform ${
+                  activeRipple ? "scale-110" : "scale-100"
+                }`}
+                style={{
+                  fontFamily: "serif",
+                  color: isCompleted ? "#FDE047" : "#FFF5D6",
+                  textShadow: "0 2px 14px rgba(246, 213, 138, 0.45)",
+                }}
+              >
+                {malaCount}
+              </span>
+              <span className="block text-[10px] font-bold text-[#F6D58A]/85 uppercase tracking-wider -mt-0.5">
+                / 108 HẠT BỒ ĐỀ
+              </span>
+            </div>
+
+            {/* Nút chạm lần hạt ngay trong lòng vòng */}
+            <div className="mt-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#F6D58A]/25 to-[#D9A441]/35 border border-[#F6D58A]/60 text-[10.5px] font-bold text-[#FFF4D2] hover:scale-105 active:scale-95 transition-all shadow-sm whitespace-nowrap">
+              {isCompleted ? "✨ ĐÃ ĐỦ 108 HẠT" : "👉 CHẠM LẦN 1 HẠT"}
+            </div>
           </div>
         </div>
 
-        {/* ── BẢNG THÔNG BÁO VIÊN MÃN 108 HẠT ── */}
-        {isCompleted ? (
-          <div className="my-2.5 p-3 rounded-2xl bg-gradient-to-r from-[#946820]/45 via-[#D9A441]/35 to-[#946820]/45 border border-[#F6D58A] text-center shadow-xl animate-in zoom-in-95">
-            <div className="text-sm sm:text-base font-bold text-[#FFF6DB] flex items-center justify-center gap-1.5">
+        {/* ── THÔNG BÁO VIÊN MÃN KHI ĐỦ 108 HẠT ── */}
+        {isCompleted && (
+          <div className="my-1.5 p-2 rounded-xl bg-gradient-to-r from-[#8C5815]/35 via-[#D9A441]/30 to-[#8C5815]/35 border border-[#F6D58A]/70 text-center shadow-md animate-in zoom-in-95">
+            <div className="text-xs sm:text-sm font-bold text-[#FFF6DB] flex items-center justify-center gap-1">
               <span>🪷</span>
               <span>ĐÃ VIÊN MÃN 108 HẠT TRÀNG</span>
               <span>🪷</span>
             </div>
-            <p className="text-[11px] text-[#F7EBD5]/90 mt-1 leading-snug">
-              Công đức vô lượng · Tịnh hóa 108 phiền não thế gian, tâm an lạc tự tại.
+            <p className="text-[10px] text-[#F7EBD5]/85 mt-0.5 leading-snug">
+              Công đức vô lượng · Tịnh hóa 108 phiền não, thân tâm an lạc tự tại.
             </p>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between px-3 py-1.5 my-1 bg-[#23140C]/75 rounded-xl border border-[#D9A441]/25 text-xs">
-            <span className="text-[#F7EBD5]/75">Tiến độ lần chuỗi:</span>
-            <span className="font-bold text-[#F6D58A] text-sm">
-              {malaCount} <span className="text-xs text-[#F7EBD5]/60">/ 108 Hạt</span>
-            </span>
           </div>
         )}
 
-        {/* ── NÚT ĐIỀU KHIỂN & LẦN TIẾP ── */}
-        <div className="flex items-center gap-2 mt-3 text-xs">
+        {/* ── BỐ CỤC 3 NÚT ĐIỀU KHIỂN RÕ RÀNG (CHỈ BẤM TỪNG 1 HẠT, KHÔNG TỰ CHẠY LIÊN TỤC) ── */}
+        <div className="flex items-center gap-2 mt-2 text-xs">
           {/* Nút Lùi 1 hạt */}
           <button
             type="button"
             onClick={stepBackOneBead}
             disabled={malaCount <= 0}
-            className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-[#F7EBD5]/80 font-medium border border-[#D9A441]/30 disabled:opacity-30 active:scale-95 transition-all"
-            title="Lùi lại 1 hạt"
+            className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-[#F7EBD5]/80 font-semibold border border-[#D9A441]/30 disabled:opacity-30 active:scale-95 transition-all whitespace-nowrap"
+            title="Lùi lại đúng 1 hạt"
           >
             ◀ Lùi
           </button>
 
-          {/* Nút Lần 1 Hạt (Nút chính to nổi bật) */}
+          {/* Nút Lần 1 Hạt chính (Bấm 1 cái ăn đúng 1 hạt) */}
           <button
             type="button"
             onClick={advanceOneBead}
             disabled={isCompleted}
-            className={`flex-1 py-2.5 px-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-center flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 px-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-1.5 whitespace-nowrap ${
               isCompleted
                 ? "bg-stone-700/60 border border-stone-500 text-stone-300 opacity-60 cursor-not-allowed"
                 : "bg-gradient-to-r from-[#F6D58A] via-[#E2AC43] to-[#B87D1E] text-[#1B0D09] hover:brightness-105"
@@ -574,15 +516,15 @@ export function MalaModal() {
             <span>{isCompleted ? "Đã Đủ 108 Hạt (Dừng)" : "Lần 1 Hạt (+1)"}</span>
           </button>
 
-          {/* Nút Làm Lại Từ Đầu */}
+          {/* Nút Đặt lại về 0 */}
           <button
             type="button"
             onClick={() => {
               resetMala();
               if (soundEnabled) malaSoundEngine.playBeadClack();
             }}
-            className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-[#F7EBD5]/80 font-medium border border-[#D9A441]/30 active:scale-95 transition-all"
-            title="Đặt lại về hạt số 0"
+            className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-[#F7EBD5]/80 font-semibold border border-[#D9A441]/30 active:scale-95 transition-all whitespace-nowrap"
+            title="Đặt lại về hạt số 0 để lần chuỗi mới"
           >
             🔄 Đặt lại
           </button>

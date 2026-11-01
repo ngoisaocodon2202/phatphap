@@ -66,6 +66,7 @@ export function usePlayerController(
     // Hỗ trợ cảm ứng 2 ngón tay (Pinch-to-Zoom)
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
+        isDragging.current = false;
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
         pinchDistRef.current = Math.hypot(dx, dy);
@@ -80,7 +81,7 @@ export function usePlayerController(
         const diff = pinchDistRef.current - dist;
         pinchDistRef.current = dist;
         const store = useTempleStore.getState();
-        store.setCameraZoom(store.cameraZoom + diff * 0.05);
+        store.setCameraZoom(store.cameraZoom + diff * 0.08);
       }
     };
 
@@ -133,14 +134,22 @@ export function usePlayerController(
       store.sutraModalOpen ||
       store.malaModalOpen;
 
-    // Khi đang mở hộp thoại (gõ lời nguyện, đọc kinh...) thì phím WASD không được làm nhân vật di chuyển
+    // Khi đang mở hộp thoại (gõ lời nguyện, đọc kinh...) thì phím WASD / Joystick không được làm nhân vật di chuyển
     const rawKeys = getKeys() as Record<string, boolean>;
     const forward = !modalActive && !!rawKeys.forward;
     const backward = !modalActive && !!rawKeys.backward;
     const left = !modalActive && !!rawKeys.left;
     const right = !modalActive && !!rawKeys.right;
     const sprint = !modalActive && !!rawKeys.sprint;
-    const isMoving = forward || backward || left || right;
+
+    // Hỗ trợ Virtual Joystick trên màn hình cảm ứng di động
+    const joyX = !modalActive ? store.joystickVector.x : 0;
+    const joyY = !modalActive ? store.joystickVector.y : 0;
+    const joyMag = Math.hypot(joyX, joyY);
+    const joyActive = joyMag > 0.08;
+
+    const keyMoving = forward || backward || left || right;
+    const isMoving = keyMoving || joyActive;
 
     // Camera tự xoay mượt tới góc nhìn mục tiêu (ví dụ nhìn ra hồ sen khi thả hoa đăng)
     if (store.cameraAzimuthTarget !== null) {
@@ -243,17 +252,29 @@ export function usePlayerController(
       rb.setLinvel({ x: 0, y: rb.linvel().y, z: 0 }, true);
       playerRotRef.current = 0;
     } else {
-      const speed = sprint ? SPRINT_SPEED : WALK_SPEED;
+      let moveX = 0;
+      let moveZ = 0;
 
-      frontVector.current.set(0, 0, Number(backward) - Number(forward));
-      sideVector.current.set(Number(right) - Number(left), 0, 0);
+      if (joyActive) {
+        moveX = joyX;
+        moveZ = joyY;
+      } else {
+        moveX = Number(right) - Number(left);
+        moveZ = Number(backward) - Number(forward);
+      }
+
+      direction.current.set(moveX, 0, moveZ);
+      if (direction.current.lengthSq() > 1) {
+        direction.current.normalize();
+      }
       eulerRef.current.set(0, cameraAngle.current.azimuth, 0);
 
+      const speed = sprint || joyMag > 0.88 ? SPRINT_SPEED : WALK_SPEED;
+      const moveScalar = joyActive ? Math.min(1, joyMag) : 1;
+
       direction.current
-        .subVectors(frontVector.current, sideVector.current)
-        .normalize()
-        .multiplyScalar(speed)
-        .applyEuler(eulerRef.current);
+        .applyEuler(eulerRef.current)
+        .multiplyScalar(speed * moveScalar);
 
       const currentVel = rb.linvel();
       rb.setLinvel(
@@ -273,9 +294,9 @@ export function usePlayerController(
         playerRotRef.current = THREE.MathUtils.lerp(
           playerRotRef.current,
           targetAngle,
-          0.18
+          0.2
         );
-        const movingAction = sprint ? "run" : "walk";
+        const movingAction = speed > 5.5 ? "run" : "walk";
         if (localAction !== movingAction) store.setLocalAction(movingAction);
       } else if (localAction === "walk" || localAction === "run") {
         store.setLocalAction("idle");
@@ -290,19 +311,32 @@ export function usePlayerController(
 
     const camDistance = store.cameraZoom || 5.4;
     const overviewFactor = THREE.MathUtils.clamp(
-      (camDistance - 4.8) / 8.4,
+      (camDistance - 4.8) / 13.0,
       0,
       1
     );
     const camElevation =
-      cameraAngle.current.elevation + overviewFactor * 0.1;
+      cameraAngle.current.elevation + overviewFactor * 0.14;
     const camAzimuth = cameraAngle.current.azimuth;
 
-    // Ống kính góc rộng kiến trúc (58° ở góc nhìn hành lễ -> 74° khi thu nhỏ toàn cảnh)
-    // giúp nhìn bao quát trọn vẹn toàn bộ Chánh Điện, 100 tấm thảm & 100 kệ sách kinh rất dễ dàng
+    // Ống kính góc rộng thích ứng thông minh:
+    // Trên desktop 16:9: fov 58° -> 76° khi nhìn toàn cảnh
+    // Trên di động màn hình dọc (portrait mode, aspect < 1): tự động điều chỉnh FOV dọc để trường nhìn ngang
+    // không bị co cụm hẹp, giúp bao quát đầy đủ 100 tấm thảm, tượng Phật và hồ sen hai bên Chánh Điện
     if ("fov" in camera) {
       const perspCam = camera as THREE.PerspectiveCamera;
-      const targetFov = THREE.MathUtils.lerp(58, 74, overviewFactor);
+      const isPortrait = perspCam.aspect < 1.0;
+
+      const baseFovDesktop = THREE.MathUtils.lerp(58, 76, overviewFactor);
+      let targetFov = baseFovDesktop;
+
+      if (isPortrait) {
+        // Chiếu từ góc nhìn ngang mục tiêu (68° gần -> 95° toàn cảnh) sang góc FOV dọc của Three.js
+        const desiredHRad = (THREE.MathUtils.lerp(68, 95, overviewFactor) * Math.PI) / 180;
+        const vFovRad = 2 * Math.atan(Math.tan(desiredHRad / 2) / perspCam.aspect);
+        targetFov = THREE.MathUtils.clamp((vFovRad * 180) / Math.PI, 65, 118);
+      }
+
       if (Math.abs(perspCam.fov - targetFov) > 0.05) {
         perspCam.fov = THREE.MathUtils.lerp(perspCam.fov, targetFov, 0.2);
         perspCam.updateProjectionMatrix();
@@ -324,14 +358,14 @@ export function usePlayerController(
     const rawCamX =
       anchorX + camDistance * Math.sin(camAzimuth) * Math.cos(camElevation);
     const rawCamY =
-      1.15 + camDistance * Math.sin(camElevation) * 0.72 + overviewFactor * 0.65;
+      1.15 + camDistance * Math.sin(camElevation) * 0.85 + overviewFactor * 1.8;
     const rawCamZ =
       anchorZ + camDistance * Math.cos(camAzimuth) * Math.cos(camElevation);
 
-    // Giữ Camera trong lòng Đại Hùng Bảo Điện rộng lớn
-    const safeCamX = THREE.MathUtils.clamp(rawCamX, -10.5, 10.5);
-    const safeCamY = THREE.MathUtils.clamp(rawCamY, 1.08, 4.85);
-    const safeCamZ = THREE.MathUtils.clamp(rawCamZ, -2.6, 17.8);
+    // Giữ Camera linh hoạt trong không gian Chánh Điện (cao tới 7.8m, lùi xa tới 26.5m để bao quát toàn bộ 100 tấm thảm)
+    const safeCamX = THREE.MathUtils.clamp(rawCamX, -14.5, 14.5);
+    const safeCamY = THREE.MathUtils.clamp(rawCamY, 1.08, 7.8);
+    const safeCamZ = THREE.MathUtils.clamp(rawCamZ, -3.2, 26.5);
 
     camTargetVec.current.set(safeCamX, safeCamY, safeCamZ);
     camera.position.lerp(camTargetVec.current, 0.18);

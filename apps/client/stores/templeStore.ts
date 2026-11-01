@@ -238,6 +238,12 @@ export interface TempleStore {
   activeNavTab: string;
   qualityPreset: QualityPreset;
 
+  // Mobile Touch Controls (Joystick & Nhảy)
+  joystickVector: { x: number; y: number };
+  setJoystickVector: (vec: { x: number; y: number }) => void;
+  jumpTrigger: number;
+  triggerJump: () => void;
+
   // Real-Time Time-of-Day & Weather (Sáng, Trưa, Chiều, Tối & Thời tiết thực tế)
   timeMode: TimeMode;
   timeOfDay: TimeOfDayPhase;
@@ -344,6 +350,12 @@ export const useTempleStore = create<TempleStore>((set, get) => ({
   activeNavTab: "chanhdien",
   qualityPreset: "high",
 
+  // Mobile Touch Controls
+  joystickVector: { x: 0, y: 0 },
+  setJoystickVector: (joystickVector) => set({ joystickVector }),
+  jumpTrigger: 0,
+  triggerJump: () => set((s) => ({ jumpTrigger: s.jumpTrigger + 1 })),
+
   timeMode: "realtime",
   timeOfDay: getRealtimePhase(),
   weatherMode: "realtime",
@@ -379,14 +391,14 @@ export const useTempleStore = create<TempleStore>((set, get) => ({
     }),
 
   zoomIn: () =>
-    set((s) => ({ cameraZoom: Math.max(1.8, +(s.cameraZoom - 1.4).toFixed(2)) })),
+    set((s) => ({ cameraZoom: Math.max(1.8, +(s.cameraZoom - 1.8).toFixed(2)) })),
   zoomOut: () =>
-    set((s) => ({ cameraZoom: Math.min(18.5, +(s.cameraZoom + 1.4).toFixed(2)) })),
+    set((s) => ({ cameraZoom: Math.min(26.0, +(s.cameraZoom + 2.2).toFixed(2)) })),
   setCameraZoom: (zoom) =>
-    set({ cameraZoom: Math.max(1.8, Math.min(18.5, zoom)) }),
+    set({ cameraZoom: Math.max(1.8, Math.min(26.0, zoom)) }),
   setOverviewCamera: () =>
     set((s) => ({
-      cameraZoom: s.cameraZoom > 8.5 ? 5.4 : 13.2,
+      cameraZoom: s.cameraZoom > 11.0 ? 5.4 : 18.5,
       cameraResetTrigger: s.cameraResetTrigger + 1,
     })),
   resetCamera: () =>

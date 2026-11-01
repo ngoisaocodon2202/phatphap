@@ -2,6 +2,7 @@
 import { useTempleStore, QualityPreset } from "@/stores/templeStore";
 import { sendRoomMessage } from "@/hooks/useMultiplayer";
 import { ZenSelect, ZenSelectOption } from "./ZenSelect";
+import { VirtualJoystick } from "./VirtualJoystick";
 
 function LotusBrandIcon({ className = "w-7 h-7" }: { className?: string }) {
   return (
@@ -122,7 +123,7 @@ export function HUD() {
   const zoomOut             = useTempleStore((s) => s.zoomOut);
   const resetCamera         = useTempleStore((s) => s.resetCamera);
   const setOverviewCamera   = useTempleStore((s) => s.setOverviewCamera);
-  const isOverview          = useTempleStore((s) => s.cameraZoom > 8.5);
+  const isOverview          = useTempleStore((s) => s.cameraZoom > 11.0);
   const sutraModalOpen      = useTempleStore((s) => s.sutraModalOpen);
   const qualityPreset       = useTempleStore((s) => s.qualityPreset);
   const setQualityPreset    = useTempleStore((s) => s.setQualityPreset);
@@ -281,8 +282,8 @@ export function HUD() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20 select-none flex flex-col justify-between font-sans overflow-hidden">
-      {/* ── 1. THANH HEADER RESPONSIVE MOBILE & DESKTOP (KHÔNG TRÀN VIỀN, KHÔNG XUỐNG DÒNG) ── */}
-      <header className="pointer-events-auto w-full max-w-full box-border bg-gradient-to-b from-[#1B0D09]/92 via-[#1B0D09]/65 to-transparent backdrop-blur-md border-b border-[#D9A441]/25 px-3 sm:px-5 md:px-6 py-2 flex items-center justify-between gap-1.5 sm:gap-3 whitespace-nowrap">
+      {/* ── 1. THANH HEADER RESPONSIVE MOBILE & DESKTOP (KHÔNG BỊ TAI THỎ / DYNAMIC ISLAND CHE, KHÔNG TRÀN VIỀN) ── */}
+      <header className="pointer-events-auto w-full max-w-full box-border bg-gradient-to-b from-[#1B0D09]/95 via-[#1B0D09]/80 to-transparent backdrop-blur-md border-b border-[#D9A441]/25 px-2.5 sm:px-5 md:px-6 pt-[max(env(safe-area-inset-top),40px)] sm:pt-2.5 pb-2 flex items-center justify-between gap-1 sm:gap-3 whitespace-nowrap">
         {/* Góc trái: Logo Hoa Sen Vàng + Pháp Danh Phật Tử + Số người hiện diện */}
         <div className="flex items-center gap-1 sm:gap-3 min-w-0">
           <div
@@ -294,7 +295,7 @@ export function HUD() {
               <LotusBrandIcon className="w-5 h-5 sm:w-8 sm:h-8" />
             </div>
             <div className="whitespace-nowrap">
-              <span className="block font-serif tracking-wide text-[13px] sm:text-base md:text-lg font-bold bg-gradient-to-r from-[#FFF3D1] via-[#F6D58A] to-[#D9A441] bg-clip-text text-transparent whitespace-nowrap leading-tight">
+              <span className="block font-serif tracking-wide text-[12px] sm:text-base md:text-lg font-bold bg-gradient-to-r from-[#FFF3D1] via-[#F6D58A] to-[#D9A441] bg-clip-text text-transparent whitespace-nowrap leading-tight">
                 SansaTemple
               </span>
               <p className="hidden sm:block text-[10px] text-[#F7EBD5]/70 tracking-wide font-light whitespace-nowrap">
@@ -306,14 +307,14 @@ export function HUD() {
           {/* Nút Đổi Tên & Giới Tính Mascot */}
           <button
             onClick={() => setOnboardingCompleted(false)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-2 sm:pl-2 sm:pr-2.5 py-1 rounded-full text-[10.5px] sm:text-xs text-[#F7EBD5] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0"
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/50 hover:border-[#F6D58A] px-1.5 sm:pl-2 sm:pr-2.5 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5] transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap min-w-0"
             title="Nhấn để đổi Tên / Pháp danh & Giới tính nhân vật"
           >
             <span
               className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-[#F6D58A] shrink-0"
               style={{ background: localPlayer.avatarColor }}
             />
-            <span className="font-semibold text-[#FFF4D2] max-w-[64px] sm:max-w-[140px] truncate whitespace-nowrap">
+            <span className="font-semibold text-[#FFF4D2] max-w-[56px] sm:max-w-[140px] truncate whitespace-nowrap">
               {localPlayer.vietnameseName || "Thiện Tâm"}
             </span>
             <span className="text-[10px] text-[#F6D58A]/80 hidden md:inline whitespace-nowrap">
@@ -324,7 +325,7 @@ export function HUD() {
           {/* Số Phật tử đang hiện diện */}
           <button
             onClick={() => setPresenceOpen(!presenceOpen)}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#1B0D09]/85 border border-[#D9A441]/35 hover:border-[#F6D58A] px-1.5 sm:px-3 py-1 rounded-full text-[10.5px] sm:text-xs text-[#F7EBD5]/90 transition-all whitespace-nowrap shrink-0"
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#1B0D09]/85 border border-[#D9A441]/35 hover:border-[#F6D58A] px-1.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs text-[#F7EBD5]/90 transition-all whitespace-nowrap shrink-0"
             title="Danh sách Phật tử đang cùng tu tập"
           >
             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse shrink-0" />
@@ -334,7 +335,7 @@ export function HUD() {
           </button>
         </div>
 
-        {/* Góc phải: Thỉnh Chuông Chùa, Chọn Âm Thanh Thực Tế & Đồ Họa */}
+        {/* Góc phải: Thỉnh Chuông Chùa, Chọn Âm Thanh, Thời Tiết & Đồ Họa */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0 whitespace-nowrap">
           <button
             onClick={handleRingTempleBell}
@@ -377,8 +378,8 @@ export function HUD() {
             />
           </div>
 
-          {/* Chọn Thời Gian & Thời Tiết Real-time (Sáng / Trưa / Chiều / Tối / Mưa) trên Desktop */}
-          <div className="hidden md:flex bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/40 rounded-full px-1.5 py-0.5 items-center text-xs text-[#F7EBD5] shadow-md whitespace-nowrap shrink-0">
+          {/* Chọn Thời Gian & Thời Tiết Real-time (Sáng / Trưa / Chiều / Tối / Mưa) */}
+          <div className="flex bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/40 rounded-full px-1 sm:px-1.5 py-0.5 items-center text-xs text-[#F7EBD5] shadow-md whitespace-nowrap shrink-0">
             <ZenSelect
               value={currentEnvSelectValue}
               options={envOptions}
@@ -403,16 +404,8 @@ export function HUD() {
         </div>
       </header>
 
-      {/* ── 2. THÔNG BÁO TÂM LINH & NÚT THỜI TIẾT REAL-TIME TRÊN MOBILE ── */}
+      {/* ── 2. THÔNG BÁO TÂM LINH ── */}
       <div className="flex flex-col items-center gap-1.5 px-2 sm:px-4 mt-1.5">
-        {/* Thanh chọn Thời tiết & Thời gian Real-time gọn nhẹ dành riêng cho Mobile (không làm tràn Navbar) */}
-        <div className="pointer-events-auto md:hidden self-end mr-1 bg-[#24110A]/90 backdrop-blur-md border border-[#D9A441]/45 rounded-full px-2 py-0.5 flex items-center text-[11px] text-[#F7EBD5] shadow-md whitespace-nowrap">
-          <ZenSelect
-            value={currentEnvSelectValue}
-            options={envOptions}
-            onChange={handleEnvChange}
-          />
-        </div>
         {bellRinging && (
           <div className="pointer-events-auto max-w-[94vw] bg-[#26120B]/92 backdrop-blur-md border border-[#D9A441]/65 text-[#F6D58A] px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs tracking-wide shadow-2xl flex items-center gap-2 whitespace-nowrap overflow-hidden">
             <span className="w-2 h-2 rounded-full bg-[#F6D58A] animate-ping shrink-0" />
@@ -583,6 +576,9 @@ export function HUD() {
           </button>
         </div>
       </footer>
+
+      {/* ── 4. VIRTUAL JOYSTICK & NÚT NHẢY DÀNH RIÊNG CHO MÀN HÌNH CẢM ỨNG DI ĐỘNG ── */}
+      <VirtualJoystick />
     </div>
   );
 }

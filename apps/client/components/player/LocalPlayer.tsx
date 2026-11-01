@@ -29,6 +29,7 @@ export function LocalPlayer() {
   const [, getKeys] = useKeyboardControls();
   const canJump = useRef(true);
   const lastSpawnTrigger = useRef(0);
+  const lastJumpTrigger = useRef(0);
 
   useFrame(() => {
     const rb = rigidBodyRef.current;
@@ -100,6 +101,11 @@ export function LocalPlayer() {
     }
 
     const { jump } = getKeys() as Record<string, boolean>;
+    const isJumpPressed = !!jump || state.jumpTrigger !== lastJumpTrigger.current;
+    if (state.jumpTrigger !== lastJumpTrigger.current) {
+      lastJumpTrigger.current = state.jumpTrigger;
+    }
+
     const modalActive =
       !state.onboardingCompleted ||
       state.prayerModalOpen ||
@@ -108,7 +114,7 @@ export function LocalPlayer() {
 
     if (
       !modalActive &&
-      jump &&
+      isJumpPressed &&
       canJump.current &&
       !state.navigationTarget &&
       Math.abs(vel.y) < 0.3

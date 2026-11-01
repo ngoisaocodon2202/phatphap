@@ -90,7 +90,24 @@ apps/
 
 ## Production Deployment
 
-### Docker Compose (full stack)
+### 🚀 Deploying Client to Vercel (Khuyến nghị cho Website)
+
+1. Truy cập [Vercel Dashboard](https://vercel.com/new) và đăng nhập với tài khoản GitHub.
+2. Chọn **Import** repository `ngoisaocodon2202/phatphap`.
+3. Trong phần **Configure Project**:
+   - **Root Directory**: Bấm **Edit** và chọn `apps/client` ⚠️ *(Rất quan trọng vì đây là cấu trúc Monorepo)*.
+   - **Framework Preset**: Tự động nhận diện `Next.js`.
+   - **Environment Variables** (Tùy chọn):
+     - `NEXT_PUBLIC_COLYSEUS_URL`: Điền WebSocket URL của game server nếu đã host (ví dụ: `wss://phatphap-server.up.railway.app`). Nếu chưa có server online, có thể để trống hoặc bỏ qua, website sẽ tự động chạy mượt mà ở chế độ Độc Thoại / Standalone với đầy đủ toàn bộ tính năng 3D, đọc kinh, thắp nhang, thả hoa đăng!
+4. Bấm **Deploy**. Sau ~1-2 phút bạn sẽ có link website `https://phatphap.vercel.app` trực tuyến!
+
+### 🌐 Deploying Multiplayer Game Server (Railway / Render / VPS)
+
+- **Railway / Render**: Chọn thư mục `apps/server`, lệnh khởi chạy `npm run start` hoặc dùng `Dockerfile`.
+- Cấu hình port: `2567`.
+- Cung cấp domain websocket (wss) cho biến `NEXT_PUBLIC_COLYSEUS_URL` ở Vercel.
+
+### Docker Compose (Full-stack local / VPS)
 ```bash
 docker-compose up --build
 ```

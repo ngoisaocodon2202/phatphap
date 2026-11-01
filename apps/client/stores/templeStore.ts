@@ -338,6 +338,8 @@ export interface TempleStore {
   setPing: (v: number) => void;
   setMalaModalOpen: (v: boolean) => void;
   incrementMala: () => void;
+  decrementMala: () => void;
+  setMalaCount: (count: number) => void;
   resetMala: () => void;
 
   // Navigation & Rituals
@@ -548,8 +550,17 @@ export const useTempleStore = create<TempleStore>((set, get) => ({
     set((s) => ({ buddhaStyle: s.buddhaStyle === "3d" ? "painting" : "3d" })),
 
   incrementMala: () => {
-    const next = (get().malaCount + 1) % 109;
-    set({ malaCount: next === 0 ? 1 : next });
+    const current = get().malaCount;
+    if (current >= 108) return; // Dừng lại ở đúng 108 hạt tràng viên mãn
+    set({ malaCount: current + 1 });
+  },
+  decrementMala: () => {
+    const current = get().malaCount;
+    if (current <= 0) return;
+    set({ malaCount: current - 1 });
+  },
+  setMalaCount: (count: number) => {
+    set({ malaCount: Math.max(0, Math.min(108, count)) });
   },
   resetMala: () => set({ malaCount: 0 }),
 

@@ -272,7 +272,12 @@ export function HUD() {
     },
     {
       id: "mala",
-      label: malaCount > 0 ? `Đếm Chuỗi Hạt (${malaCount})` : "Đếm Chuỗi Hạt",
+      label:
+        malaCount > 0
+          ? malaCount >= 108
+            ? "Chuỗi Hạt (108/108)"
+            : `Chuỗi Hạt (${malaCount}/108)`
+          : "Đếm Chuỗi Hạt",
       onClick: handleMalaClick,
       disabled: false,
       active: false,
